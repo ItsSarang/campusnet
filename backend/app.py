@@ -202,6 +202,86 @@ def compute_router_tables(cut_edges=None):
 
     return result_tables
 
+
+def compute_building_reachability(cut_edges=None, cut_departments=None):
+    if cut_edges is None:
+        cut_edges = CUT_EDGES
+    else:
+        cut_edges = set(cut_edges)
+    if cut_departments is None:
+        cut_departments = CUT_DEPARTMENTS
+    else:
+        cut_departments = set(cut_departments)
+
+    router_tables = compute_router_tables(cut_edges)
+    tables_by_router = {t["router"]: t for t in router_tables}
+    is_wan_cut = "link-Campus-Core-Router-ISP-Edge-Router" in cut_edges
+
+    reachability = {}
+    for dept_id, dept in DEPARTMENTS.items():
+        r_name = dept["router"]
+        transit_edge = f"link-{r_name}-Campus-Core-Router"
+        trunk_edge = f"link-{r_name}-{dept['switch']}"
+
+        is_transit_cut = transit_edge in cut_edges or dept_id in cut_departments
+        is_trunk_cut = trunk_edge in cut_edges
+
+        tbl = tables_by_router.get(r_name, {})
+        route_to_isp = next(
+            (r for r in tbl.get("routes", []) if r["destination"] == "ISP-Edge-Router"),
+            None,
+        )
+        can_reach_isp = (
+            route_to_isp is not None
+            and route_to_isp.get("distance") != "Unreachable"
+            and not is_trunk_cut
+        )
+
+        if not can_reach_isp:
+            reason = (
+                "Gateway trunk severed"
+                if is_trunk_cut
+                else "Campus WAN gateway severed"
+                if is_wan_cut
+                else "All routes to external gateway severed"
+            )
+            reachability[dept_id] = {
+                "name": dept["name"],
+                "status": "offline",
+                "isOffline": True,
+                "isRerouted": False,
+                "nextHop": "None",
+                "reason": reason,
+            }
+        elif is_transit_cut:
+            reachability[dept_id] = {
+                "name": dept["name"],
+                "status": "rerouted",
+                "isOffline": False,
+                "isRerouted": True,
+                "nextHop": route_to_isp.get("nextHop", "Neighbor"),
+                "reason": f"Direct link severed, failover routed via {route_to_isp.get('nextHop')}",
+            }
+        else:
+            reachability[dept_id] = {
+                "name": dept["name"],
+                "status": "normal",
+                "isOffline": False,
+                "isRerouted": False,
+                "nextHop": "Direct",
+                "reason": "Direct uplink healthy",
+            }
+
+    reachability["core"] = {
+        "name": "Campus Core Distribution Hub",
+        "status": "offline" if is_wan_cut else "normal",
+        "isOffline": is_wan_cut,
+        "isRerouted": False,
+        "nextHop": "ISP" if not is_wan_cut else "None",
+        "reason": "Campus WAN gateway severed" if is_wan_cut else "Direct WAN link healthy",
+    }
+    return reachability
+
 BUILDINGS = [
     {
         "id": "block-cs",
@@ -524,6 +604,16 @@ def get_topology():
                 "height": height_dc,
             },
         ]
+
+        reachability = compute_building_reachability(CUT_EDGES, CUT_DEPARTMENTS)
+        for b in buildings:
+            dept_id = b.get("departmentId")
+            reach = reachability.get(dept_id, {})
+            b["status"] = reach.get("status", "normal")
+            b["isOffline"] = reach.get("isOffline", False)
+            b["isRerouted"] = reach.get("isRerouted", False)
+            b["nextHop"] = reach.get("nextHop", "Direct")
+            b["reason"] = reach.get("reason", "")
 
         nodes = []
 
@@ -858,10 +948,12 @@ def toggle_link():
         return jsonify({"error": "edgeId or departmentId required"}), 400
 
     if action == "toggle":
-        action = "restore" if edge_id in CUT_EDGES else "cut"
+        action = "restore" if (edge_id in CUT_EDGES or (dept_id and dept_id in CUT_DEPARTMENTS)) else "cut"
 
     if action == "cut":
         CUT_EDGES.add(edge_id)
+        if dept_id:
+            CUT_DEPARTMENTS.add(dept_id)
         for dept_k, dept_v in DEPARTMENTS.items():
             if edge_id == f"link-{dept_v['router']}-Campus-Core-Router":
                 CUT_DEPARTMENTS.add(dept_k)
@@ -879,6 +971,8 @@ def toggle_link():
         log_event("OUTAGE", f"Physical carrier severed on cable: {edge_id}")
     else:
         CUT_EDGES.discard(edge_id)
+        if dept_id:
+            CUT_DEPARTMENTS.discard(dept_id)
         for dept_k, dept_v in DEPARTMENTS.items():
             if edge_id == f"link-{dept_v['router']}-Campus-Core-Router":
                 CUT_DEPARTMENTS.discard(dept_k)
@@ -901,6 +995,7 @@ def toggle_link():
         pass
 
     tables = compute_router_tables(CUT_EDGES)
+    reachability = compute_building_reachability(CUT_EDGES, CUT_DEPARTMENTS)
 
     return jsonify(
         {
@@ -912,6 +1007,7 @@ def toggle_link():
             "cutEdges": list(CUT_EDGES),
             "cutDepartments": list(CUT_DEPARTMENTS),
             "tables": tables,
+            "reachability": reachability,
         }
     )
 

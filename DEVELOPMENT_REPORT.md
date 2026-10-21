@@ -13,7 +13,18 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 
 ## Implemented Features
 
-### 1. Universal Edge Cable Cut System & Cable Inspector:
+### 1. Packet Tracer Router Synchronization & Saved Backbone:
+- Instantiated all four Department Gateway Routers (`Router-CS`, `Router-LIB`, `Router-ADMIN`, `Router-DC` - Cisco 2911 model) into Cisco Packet Tracer 9.0 data plane.
+- Permanently committed and saved device configurations to `packet-tracer/campusnet_backbone.pkt`.
+- Routers now appear in both physical Cisco Packet Tracer workspace and web canvas.
+
+### 2. Three-Tier Reachability Engine (Failover vs. Block Offline):
+- Replaced unconditional block red outline with full graph BFS reachability calculation to external gateway (`ISP-Edge-Router`).
+- If a direct core transit cable is severed but an alternate path exists via an adjacent router peer (`Router-CS <-> Router-LIB` or `Router-ADMIN <-> Router-DC`), the block border does not turn red; it turns amber (`#f59e0b`) with a `[FAILOVER ACTIVE (via NextHop)]` indicator.
+- If all egress paths or the internal default gateway trunk are severed, the block border turns red (`#ef4444`) with `[BLOCK OFFLINE (NO ROUTE TO OUTSIDE)]`.
+- Notification banners dynamically distinguish between active failover rerouting (`type: warning`) and complete subnet isolation (`type: error`).
+
+### 3. Universal Edge Cable Cut System & Cable Inspector:
 - Universal edge-level interactivity allowing user to click any cable on the graph across all 6 network connection categories (Core Transit, Lateral Mesh, WAN Gateway, Gateway Trunk, Workstation Patch Cord, and Server Uplink).
 - Dedicated side-panel Cable Inspector displaying connected device endpoints, physical port names, carrier state (Connected vs. Severed), topological impact explanation, and direct Cut Cable / Repair Cable action button.
 - On-canvas visual feedback rendering severed cables with red dashed animations and interactive centered `[SEVERED]` badges.

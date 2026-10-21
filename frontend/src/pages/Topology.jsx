@@ -27,28 +27,44 @@ import {
   Play,
   ShieldAlert,
   Globe,
+  Activity,
 } from 'lucide-react';
 import { api } from '../services/api';
 
 const BuildingNode = ({ data }) => {
-  const isCut = data.isCut;
+  const isOffline = Boolean(data.isOffline);
+  const isRerouted = !isOffline && Boolean(data.isRerouted);
+  const isCut = Boolean(data.isCut);
+
+  let borderColor = '#dfd8c8';
+  let bgColor = 'rgba(255, 255, 255, 0.5)';
+  let ringClasses = 'shadow-xs';
+
+  if (isOffline) {
+    borderColor = '#ef4444';
+    bgColor = 'rgba(254, 242, 242, 0.75)';
+    ringClasses = 'shadow-md shadow-rose-100 ring-2 ring-rose-400';
+  } else if (isRerouted) {
+    borderColor = '#f59e0b';
+    bgColor = 'rgba(254, 243, 199, 0.35)';
+    ringClasses = 'shadow-sm ring-2 ring-amber-300';
+  }
+
   return (
     <div
       style={{
         width: data.width || 380,
         height: data.height || 280,
-        borderColor: isCut ? '#ef4444' : '#dfd8c8',
-        backgroundColor: isCut ? 'rgba(254, 242, 242, 0.75)' : 'rgba(255, 255, 255, 0.5)',
+        borderColor: borderColor,
+        backgroundColor: bgColor,
       }}
-      className={`rounded-2xl border-2 border-dashed transition-all duration-300 pointer-events-auto p-4 flex flex-col justify-between ${
-        isCut ? 'shadow-md shadow-rose-100 ring-2 ring-rose-300' : 'shadow-xs'
-      }`}
+      className={`rounded-2xl border-2 border-dashed transition-all duration-300 pointer-events-auto p-4 flex flex-col justify-between ${ringClasses}`}
     >
       <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#dfd8c8]/80 whitespace-nowrap">
         <div className="flex items-center space-x-2 min-w-0">
           <span
             className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-            style={{ backgroundColor: data.color }}
+            style={{ backgroundColor: isOffline ? '#ef4444' : isRerouted ? '#f59e0b' : data.color }}
           />
           <h4 className="text-xs font-bold text-[#1e1c19] tracking-tight truncate">
             {data.name}
@@ -59,6 +75,16 @@ const BuildingNode = ({ data }) => {
           {data.vlan > 0 && (
             <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#eae4d8] text-[#554f45] border border-[#dfd8c8] font-semibold">
               VLAN {data.vlan}
+            </span>
+          )}
+          {isRerouted && (
+            <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300 font-bold uppercase tracking-tight">
+              Failover: {data.nextHop}
+            </span>
+          )}
+          {isOffline && (
+            <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-300 font-bold uppercase tracking-tight">
+              Offline
             </span>
           )}
         </div>
@@ -84,12 +110,12 @@ const BuildingNode = ({ data }) => {
               {isCut ? (
                 <>
                   <Wrench className="w-3 h-3" />
-                  <span>Repair</span>
+                  <span>Repair Uplink</span>
                 </>
               ) : (
                 <>
                   <Scissors className="w-3 h-3" />
-                  <span>Cut</span>
+                  <span>Cut Uplink</span>
                 </>
               )}
             </button>
@@ -99,15 +125,23 @@ const BuildingNode = ({ data }) => {
 
       <div className="flex-1 pointer-events-none" />
 
-      {isCut && (
+      {isOffline ? (
         <div className="pt-2 border-t border-rose-200 flex items-center justify-between text-[10px] text-rose-600 font-bold">
           <span className="flex items-center space-x-1">
-            <AlertTriangle className="w-3 h-3" />
-            <span>LINK SEVERED (OUTAGE)</span>
+            <AlertTriangle className="w-3 h-3 text-rose-600" />
+            <span>BLOCK OFFLINE (NO ROUTE TO OUTSIDE)</span>
           </span>
-          <span>Packets Dropped</span>
+          <span className="font-mono">Packets Dropped</span>
         </div>
-      )}
+      ) : isRerouted ? (
+        <div className="pt-2 border-t border-amber-200 flex items-center justify-between text-[10px] text-amber-800 font-semibold">
+          <span className="flex items-center space-x-1">
+            <Activity className="w-3 h-3 text-amber-600" />
+            <span>FAILOVER ACTIVE (REROUTED VIA {String(data.nextHop).toUpperCase()})</span>
+          </span>
+          <span className="font-mono text-emerald-700 font-bold">Online via Failover</span>
+        </div>
+      ) : null}
     </div>
   );
 };
@@ -378,15 +412,30 @@ export const Topology = () => {
       const res = await api.toggleLink(departmentId);
       if (res.success) {
         if (res.isCut) {
-          setBannerAlert({
-            type: 'error',
-            message: `Physical uplink severed for ${departmentId.toUpperCase()}! Subnet isolated from Inter-VLAN routing.`,
-            departmentId,
-          });
+          const reach = res.reachability?.[departmentId];
+          if (reach?.isOffline) {
+            setBannerAlert({
+              type: 'error',
+              message: `[BLOCK OFFLINE] Physical uplink severed for ${reach?.name || departmentId.toUpperCase()}. No route to external gateway exists, block is completely isolated!`,
+              departmentId,
+            });
+          } else if (reach?.isRerouted) {
+            setBannerAlert({
+              type: 'warning',
+              message: `[FAILOVER ACTIVE] Direct uplink severed for ${reach?.name || departmentId.toUpperCase()}. Traffic rerouted to external gateway via ${reach.nextHop}. Block remains online.`,
+              departmentId,
+            });
+          } else {
+            setBannerAlert({
+              type: 'warning',
+              message: `Physical uplink severed for ${departmentId.toUpperCase()}. Link is DOWN.`,
+              departmentId,
+            });
+          }
         } else {
           setBannerAlert({
             type: 'success',
-            message: `Physical uplink restored for ${departmentId.toUpperCase()}. Inter-VLAN routing re-established.`,
+            message: `Physical uplink restored for ${departmentId.toUpperCase()}. Direct core routing re-established.`,
             departmentId,
           });
         }
@@ -405,10 +454,37 @@ export const Topology = () => {
       if (res.success) {
         const isNowCut = res.isCut;
         if (isNowCut) {
-          setBannerAlert({
-            type: 'error',
-            message: `Physical carrier severed: ${edge?.categoryLabel || edgeId}. Link is DOWN.`,
-          });
+          const reach = res.reachability || {};
+          const offlineBlocks = Object.entries(reach).filter(
+            ([k, v]) => v.isOffline && k !== 'isp'
+          );
+          const reroutedBlocks = Object.entries(reach).filter(
+            ([k, v]) => v.isRerouted
+          );
+
+          if (edgeId === 'link-Campus-Core-Router-ISP-Edge-Router') {
+            setBannerAlert({
+              type: 'error',
+              message: '[CAMPUS WAN OUTAGE] External ISP internet gateway severed. All campus blocks are offline from the outside world!',
+            });
+          } else if (offlineBlocks.length > 0) {
+            const firstOffline = offlineBlocks[0][1];
+            setBannerAlert({
+              type: 'error',
+              message: `[BLOCK OFFLINE] ${firstOffline.name} has lost all reachability to the outside world (${firstOffline.reason})!`,
+            });
+          } else if (reroutedBlocks.length > 0) {
+            const firstRerouted = reroutedBlocks[0][1];
+            setBannerAlert({
+              type: 'warning',
+              message: `[FAILOVER ACTIVE] Direct link cut. Traffic for ${firstRerouted.name} rerouted to external gateway via ${firstRerouted.nextHop}. Block remains online.`,
+            });
+          } else {
+            setBannerAlert({
+              type: 'warning',
+              message: `Physical carrier severed: ${edge?.categoryLabel || edgeId}. Link is DOWN.`,
+            });
+          }
         } else {
           setBannerAlert({
             type: 'success',
@@ -661,12 +737,16 @@ export const Topology = () => {
           className={`p-3 rounded-xl border flex items-center justify-between text-xs transition-all shadow-xs ${
             bannerAlert.type === 'error'
               ? 'bg-rose-50 text-rose-800 border-rose-300'
+              : bannerAlert.type === 'warning'
+              ? 'bg-amber-50 text-amber-900 border-amber-300'
               : 'bg-emerald-50 text-emerald-800 border-emerald-300'
           }`}
         >
           <div className="flex items-center space-x-2 font-medium">
             {bannerAlert.type === 'error' ? (
               <AlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+            ) : bannerAlert.type === 'warning' ? (
+              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
             ) : (
               <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
             )}

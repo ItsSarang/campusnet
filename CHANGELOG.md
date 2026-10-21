@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Packet Tracer Router Hardware Synchronization:**
+  - Instantiated and saved all four departmental gateway routers (`Router-CS`, `Router-LIB`, `Router-ADMIN`, `Router-DC` - Cisco 2911 model) into Cisco Packet Tracer 9.0 and committed them directly into `packet-tracer/campusnet_backbone.pkt`.
+  - Department routers now exist synchronously across both the physical Packet Tracer simulation data plane and the interactive web topology canvas.
+- **Three-Tier Failover vs Block Offline Reachability System:**
+  - Implemented dynamic reachability engine evaluating full-graph BFS path connectivity from each department to external gateway (`ISP-Edge-Router`).
+  - Blocks do not turn red when direct core transit links are cut if alternative lateral router routes remain viable (`Router-CS <-> Router-LIB` or `Router-ADMIN <-> Router-DC`).
+  - Amber border (`#f59e0b`) and `[FAILOVER ACTIVE (via NextHop)]` status badge rendered when traffic is rerouted through an adjacent peer router, with block remaining online.
+  - Red border (`#ef4444`), ring, and `[BLOCK OFFLINE (NO ROUTE TO OUTSIDE)]` status rendered only when all alternative egress routes or local gateway trunks are severed.
+  - Updated notification banner to differentiate between failover rerouting (`type: warning`) and complete subnet isolation (`type: error`).
+
+### Added
 - **Universal Edge Cable Cut System & Cable Inspector:**
   - Interactive cable click detection on any connection across the campus network (Core Transit, Lateral Mesh, WAN Gateway, Switch Trunk, Access Patch Cord, and Server Uplink).
   - Dedicated Cable Inspector drawer displaying physical endpoints, port names, carrier state, topological impact analysis, and direct Cut/Repair toggle.
