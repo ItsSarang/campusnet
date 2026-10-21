@@ -322,6 +322,23 @@ def get_topology():
             else:
                 pos = {"x": d.get("x", 400.0) - 200, "y": d.get("y", 300.0) - 100}
 
+            dept = DEPARTMENTS.get(dept_id)
+            if name == "Campus-DNS-Server":
+                ip_addr = "192.168.100.10"
+                ip_mode = "Static"
+            elif name == "Campus-Core-Router":
+                ip_addr = "192.168.10.1 / 20.1 / 30.1 / 100.1"
+                ip_mode = "Layer 3 SVI Gateway"
+            elif kind == "switch":
+                ip_addr = "Layer 2 Transparent"
+                ip_mode = "802.1Q Trunk / Access"
+            elif dept:
+                ip_addr = f"192.168.{dept['vlan']}.5{max(1, cs_pc_count)}"
+                ip_mode = "DHCP Dynamic Pool"
+            else:
+                ip_addr = "192.168.x.x"
+                ip_mode = "DHCP"
+
             nodes.append(
                 {
                     "id": name,
@@ -332,6 +349,13 @@ def get_topology():
                         "kind": kind,
                         "model": model,
                         "department": dept_id,
+                        "departmentName": dept["name"] if dept else "Campus Core Backbone",
+                        "block": dept["block"] if dept else "Campus Core Distribution Hub",
+                        "ip": ip_addr,
+                        "ipMode": ip_mode,
+                        "vlan": dept["vlan"] if dept else ("10, 20, 30, 100" if kind == "router" else 1),
+                        "gateway": dept["gateway"] if dept else "192.168.10.1",
+                        "subnet": dept["subnet"] if dept else "802.1Q Backbone",
                         "status": "online",
                     },
                 }
