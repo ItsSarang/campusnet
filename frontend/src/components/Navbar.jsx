@@ -1,5 +1,5 @@
 import React from 'react';
-import { Network, Activity, Shield, Radio } from 'lucide-react';
+import { Activity, Network, Shield, Radio } from 'lucide-react';
 
 export const Navbar = ({ currentTab, onSelectTab, status }) => {
   const tabs = [
@@ -9,55 +9,53 @@ export const Navbar = ({ currentTab, onSelectTab, status }) => {
   ];
 
   return (
-    <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+    <header className="sticky top-0 z-50 w-full bg-[#f2eee5]/95 backdrop-blur-md border-b border-[#dfd8c8] select-none">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-3">
-            <div className="bg-sky-500/10 p-2 rounded-lg border border-sky-500/20">
-              <Network className="w-6 h-6 text-sky-400" />
-            </div>
-            <div>
-              <span className="font-bold text-lg bg-gradient-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent">
-                CampusNet
-              </span>
-              <span className="ml-2 px-2 py-0.5 text-xs font-semibold bg-sky-950 text-sky-300 border border-sky-800 rounded-full">
-                Packet Tracer 9.0 Live (React JS)
-              </span>
-            </div>
+        <div className="flex items-center justify-between h-14">
+          <div className="flex items-center gap-2.5 shrink-0">
+            <span className="font-bold text-[#1e1c19] text-[16px] tracking-tight">
+              CampusNet
+            </span>
+            <span className="text-[11px] font-mono text-[#706b63] bg-[#e6e0d2] px-2.5 py-0.5 rounded-full border border-[#d8d0bf] font-medium">
+              Packet Tracer 9.0 Live
+            </span>
           </div>
 
-          <nav className="flex space-x-1">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = currentTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => onSelectTab(tab.id)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
+          <nav className="flex items-center shrink-0">
+            <div className="inline-flex items-center bg-[#e6e0d2] p-0.5 rounded-xl border border-[#d8d0bf]">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = currentTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => onSelectTab(tab.id)}
+                    className={`flex items-center space-x-1.5 px-3 py-1 rounded-lg text-[12px] font-mono tracking-wide transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-[#faf8f4] text-[#1e1c19] font-semibold shadow-xs'
+                        : 'text-[#706b63] hover:text-[#1e1c19] font-normal'
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </nav>
 
           <div className="flex items-center space-x-2">
             <span
-              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium border ${
                 status?.connected
-                  ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
-                  : 'bg-rose-950/80 text-rose-300 border-rose-800'
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                  : 'bg-rose-50 text-rose-800 border-rose-300'
               }`}
             >
               <Radio
                 className={`w-3 h-3 mr-1.5 ${
-                  status?.connected ? 'text-emerald-400 animate-pulse' : 'text-rose-400'
+                  status?.connected ? 'text-emerald-600 animate-pulse' : 'text-rose-600'
                 }`}
               />
               {status?.connected ? 'PT Connected' : 'Disconnected'}

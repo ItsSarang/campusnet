@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Global ASAG Offwhite Color Palette & Design System:**
+  - Standardized the entire web application on the warm offwhite aesthetic from the ASAG project.
+  - Base canvas background set to `#f7f4ed`, card and panel surfaces to `#fdfcf9` and `#faf8f4`, with `#dfd8c8` borders and `#1e1c19` typography.
+  - Re-themed Dashboard metrics, department capacity sliders, progress bars, and simulation feed.
+  - Re-themed Security & Ping Center, terminal stdout display, ACL evaluation table, and modal dialogs.
+- **Streamlined Navbar:**
+  - Removed the standalone CampusNet icon box.
+  - Positioned the Packet Tracer 9.0 Live status pill badge immediately adjacent to the CampusNet brand name.
+  - Applied segmented rounded pill tab container styling (`bg-[#e6e0d2] p-0.5 rounded-xl border border-[#d8d0bf]`).
+- **Footer Removal:**
+  - Removed the bottom footer element completely from `App.jsx` to achieve a clean full-viewport canvas and view presentation.
 - **Central DHCP Server Service in Packet Tracer:**
   - Provisioned `Campus-DHCP-Server` (model: `Server-PT`) with static IP `192.168.100.20` in the Data Center block (`block-dc`).
   - Physically cabled to `SW-SERVERS` on port FastEthernet0/3 in Cisco Packet Tracer 9.0 and saved to `packet-tracer/campusnet_backbone.pkt`.

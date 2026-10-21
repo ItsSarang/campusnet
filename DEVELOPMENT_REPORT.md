@@ -13,7 +13,22 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 
 ## Implemented Features
 
-### 1. Central DHCP Server Service in Packet Tracer:
+### 1. Global ASAG Offwhite Design System:
+- Migrated the whole frontend palette to the warm offwhite aesthetic from the ASAG project.
+- Applied `#f7f4ed` page canvas background, `#fdfcf9` and `#faf8f4` card and panel surfaces, `#dfd8c8` border styling, and `#1e1c19` high-contrast typography.
+- Fully re-themed Dashboard metric widgets, VLSM capacity controls, progress bars, and simulation log.
+- Fully re-themed Communication & Security Center, ping terminal console, ACL rules table, and modal dialogs.
+- Cleaned up `index.css` with `color-scheme: light` and customized `.dot-grid` utility.
+
+### 2. Streamlined Navbar & Identity:
+- Removed the standalone CampusNet icon box from the navigation bar.
+- Repositioned the live Packet Tracer pill badge directly after the CampusNet name.
+- Upgraded navigation links to segmented pill buttons (`bg-[#e6e0d2]` container with `#faf8f4` active tab).
+
+### 3. Page Footer Removal:
+- Completely eliminated the bottom footer bar across the entire application in `App.jsx`, providing uninterrupted vertical space.
+
+### 4. Central DHCP Server Service in Packet Tracer:
 - Deployed dedicated `Campus-DHCP-Server` (model: `Server-PT`) with static IP `192.168.100.20` in Data Center facility (`block-dc`).
 - Physically cabled to `SW-SERVERS` FastEthernet0/3 in Cisco Packet Tracer 9.0 and saved to `packet-tracer/campusnet_backbone.pkt`.
 - Enabled native DHCP server daemon with department lease pools (`Pool-CS`, `Pool-LIB`, `Pool-ADMIN`), gateways, and DNS settings.

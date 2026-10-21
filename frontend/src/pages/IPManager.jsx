@@ -80,24 +80,24 @@ export const IPManager = ({ departments, devices, onRefresh }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between bg-slate-900 p-6 rounded-xl border border-slate-800 shadow">
+      <div className="flex items-center justify-between bg-[#fdfcf9] p-6 rounded-2xl border border-[#dfd8c8] shadow-[0_2px_12px_-2px_rgba(50,40,30,0.05)]">
         <div>
-          <h2 className="text-xl font-bold text-white">Campus Structure & IP Manager</h2>
-          <p className="text-sm text-slate-400 mt-1">
+          <h2 className="text-xl font-bold text-[#1e1c19]">Campus Structure & IP Manager</h2>
+          <p className="text-sm text-[#706b63] mt-1">
             Provision, cable, and manage devices and IPv4 allocations live in Cisco Packet Tracer.
           </p>
         </div>
         <div className="flex items-center space-x-3">
           <button
             onClick={onRefresh}
-            className="flex items-center space-x-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm font-medium border border-slate-700 transition"
+            className="flex items-center space-x-2 px-3.5 py-2 bg-[#eae4d8] hover:bg-[#dfd8c8] text-[#554f45] rounded-xl text-sm font-semibold border border-[#d8d0bf] transition"
           >
             <RefreshCw className="w-4 h-4" />
             <span>Sync Devices</span>
           </button>
           <button
             onClick={() => setModalOpen(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium shadow-lg shadow-emerald-600/20 transition"
+            className="flex items-center space-x-2 px-4 py-2 bg-[#1e1c19] hover:bg-[#33302b] text-[#f7f4ed] rounded-xl text-sm font-semibold shadow-xs transition"
           >
             <Plus className="w-4 h-4" />
             <span>Add Workstation</span>
@@ -109,27 +109,27 @@ export const IPManager = ({ departments, devices, onRefresh }) => {
         <div
           className={`p-4 rounded-xl border flex items-center space-x-3 text-sm ${
             message.type === 'success'
-              ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800'
-              : 'bg-rose-950/60 text-rose-300 border-rose-800'
+              ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
+              : 'bg-rose-50 text-rose-900 border-rose-300'
           }`}
         >
           {message.type === 'success' ? (
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600" />
           ) : (
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-600" />
           )}
           <span>{message.text}</span>
         </div>
       )}
 
-      <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden shadow">
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-          <h3 className="font-bold text-white text-base">Active Campus Devices ({devices.length})</h3>
-          <span className="text-xs text-slate-400">Live in Cisco Packet Tracer</span>
+      <div className="bg-[#fdfcf9] rounded-2xl border border-[#dfd8c8] overflow-hidden shadow-[0_2px_12px_-2px_rgba(50,40,30,0.05)]">
+        <div className="px-6 py-4 border-b border-[#dfd8c8] bg-[#faf8f4] flex items-center justify-between">
+          <h3 className="font-bold text-[#1e1c19] text-base">Active Campus Devices ({devices.length})</h3>
+          <span className="text-xs text-[#706b63] font-mono">Live in Cisco Packet Tracer</span>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-300">
-            <thead className="bg-slate-950/60 text-slate-400 uppercase text-[11px] font-semibold tracking-wider border-b border-slate-800">
+          <table className="w-full text-left text-sm text-[#1e1c19]">
+            <thead className="bg-[#f2eee5] text-[#706b63] uppercase text-[11px] font-mono font-semibold tracking-wider border-b border-[#dfd8c8]">
               <tr>
                 <th className="px-6 py-3">Device Name</th>
                 <th className="px-6 py-3">Type / Model</th>
@@ -138,59 +138,47 @@ export const IPManager = ({ departments, devices, onRefresh }) => {
                 <th className="px-6 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-[#dfd8c8]">
               {devices.map((device) => {
                 const isHost = device.kind === 'host' || device.model === 'PC-PT';
                 const isRouter = device.kind === 'router';
                 const isServer = device.kind === 'server';
 
                 return (
-                  <tr key={device.name} className="hover:bg-slate-800/30 transition">
-                    <td className="px-6 py-4 font-medium text-white flex items-center space-x-3">
+                  <tr key={device.name} className="hover:bg-[#faf8f4] transition">
+                    <td className="px-6 py-4 font-semibold text-[#1e1c19] flex items-center space-x-3">
                       {isHost ? (
-                        <Laptop className="w-4 h-4 text-emerald-400" />
-                      ) : isServer ? (
-                        <Server className="w-4 h-4 text-amber-400" />
+                        <Laptop className="w-4 h-4 text-emerald-600" />
+                      ) : isRouter ? (
+                        <Server className="w-4 h-4 text-indigo-600" />
                       ) : (
-                        <Server className="w-4 h-4 text-sky-400" />
+                        <Server className="w-4 h-4 text-amber-600" />
                       )}
                       <span>{device.name}</span>
                     </td>
-                    <td className="px-6 py-4 text-slate-400">
-                      <span className="px-2 py-0.5 rounded text-xs bg-slate-800 border border-slate-700">
-                        {device.model}
+                    <td className="px-6 py-4 text-xs font-mono text-[#554f45]">
+                      {device.model || device.kind}
+                    </td>
+                    <td className="px-6 py-4 font-mono text-xs">
+                      <span className="px-2 py-0.5 rounded-md bg-[#eae4d8] text-[#554f45] border border-[#dfd8c8]">
+                        {device.ip || 'DHCP Dynamic'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      {device.department ? (
-                        <span className="text-sky-300 font-mono text-xs">
-                          {departments.find((d) => d.id === device.department)?.subnet || 'Trunk'}
-                        </span>
-                      ) : isRouter ? (
-                        <span className="text-indigo-400 text-xs font-semibold">
-                          Inter-VLAN Gateway
-                        </span>
-                      ) : (
-                        <span className="text-slate-500 text-xs">Campus Backbone</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-950 text-emerald-300 border border-emerald-800">
-                        Live in PT
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-emerald-50 text-emerald-800 border border-emerald-300">
+                        Online
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      {isHost ? (
+                      {isHost && (
                         <button
                           onClick={() => handleDeleteDevice(device.name)}
                           disabled={loading}
-                          className="text-rose-400 hover:text-rose-300 p-1.5 rounded hover:bg-rose-950/40 transition"
-                          title="Delete from Packet Tracer"
+                          className="text-rose-600 hover:text-rose-800 p-1 rounded-lg hover:bg-rose-50 transition"
+                          title="Delete device"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
-                      ) : (
-                        <span className="text-xs text-slate-600">Protected</span>
                       )}
                     </td>
                   </tr>
@@ -202,69 +190,64 @@ export const IPManager = ({ departments, devices, onRefresh }) => {
       </div>
 
       {modalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-1">Add Workstation to Packet Tracer</h3>
-            <p className="text-xs text-slate-400 mb-4">
-              Spawns a PC-PT, connects a straight-through cable to the department switch, and
-              configures IP.
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-[#fdfcf9] border border-[#dfd8c8] rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h3 className="text-lg font-bold text-[#1e1c19] mb-1">
+              Add Campus Workstation (PC-PT)
+            </h3>
+            <p className="text-xs text-[#706b63] mb-4">
+              Instantiates a new PC-PT in Cisco Packet Tracer and cables it to the department switch.
             </p>
 
             <form onSubmit={handleAddDevice} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Device Name / Hostname
-                </label>
+                <label className="block text-xs font-semibold text-[#554f45] mb-1 font-mono">Device Name</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g., CS-LAB1-PC01"
+                  placeholder="e.g. CS-PC-02"
                   value={deviceName}
                   onChange={(e) => setDeviceName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500"
+                  className="w-full bg-[#faf8f4] border border-[#dfd8c8] rounded-xl px-3 py-2 text-sm text-[#1e1c19] focus:outline-none focus:border-[#1e1c19]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Campus Department
-                </label>
+                <label className="block text-xs font-semibold text-[#554f45] mb-1 font-mono">Department Zone</label>
                 <select
                   value={departmentId}
                   onChange={(e) => handleDeptChange(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500"
+                  className="w-full bg-[#faf8f4] border border-[#dfd8c8] rounded-xl px-3 py-2 text-sm text-[#1e1c19] focus:outline-none focus:border-[#1e1c19]"
                 >
                   {departments.map((d) => (
                     <option key={d.id} value={d.id}>
-                      {d.name} (VLAN {d.vlan} - {d.subnet})
+                      {d.name} (VLAN {d.vlan})
                     </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  IP Allocation Method
-                </label>
+                <label className="block text-xs font-semibold text-[#554f45] mb-1 font-mono">IPv4 Allocation Mode</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setAllocationType('DHCP')}
-                    className={`py-2 text-xs font-medium rounded-lg border text-center transition ${
+                    className={`py-2 text-xs font-bold font-mono rounded-xl border text-center transition ${
                       allocationType === 'DHCP'
-                        ? 'bg-sky-500/20 text-sky-400 border-sky-500/50'
-                        : 'bg-slate-950 text-slate-400 border-slate-800'
+                        ? 'bg-[#1e1c19] text-[#f7f4ed] border-[#1e1c19]'
+                        : 'bg-[#faf8f4] text-[#706b63] border-[#dfd8c8] hover:bg-[#eae4d8]'
                     }`}
                   >
-                    DHCP (Automatic)
+                    DHCP Dynamic
                   </button>
                   <button
                     type="button"
                     onClick={() => setAllocationType('STATIC')}
-                    className={`py-2 text-xs font-medium rounded-lg border text-center transition ${
+                    className={`py-2 text-xs font-bold font-mono rounded-xl border text-center transition ${
                       allocationType === 'STATIC'
-                        ? 'bg-sky-500/20 text-sky-400 border-sky-500/50'
-                        : 'bg-slate-950 text-slate-400 border-slate-800'
+                        ? 'bg-[#1e1c19] text-[#f7f4ed] border-[#1e1c19]'
+                        : 'bg-[#faf8f4] text-[#706b63] border-[#dfd8c8] hover:bg-[#eae4d8]'
                     }`}
                   >
                     Static IP
@@ -274,18 +257,16 @@ export const IPManager = ({ departments, devices, onRefresh }) => {
 
               {allocationType === 'STATIC' && (
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
-                    Static IP Address ({selectedDept?.subnet})
-                  </label>
+                  <label className="block text-xs font-semibold text-[#554f45] mb-1 font-mono">Static IPv4 Address</label>
                   <input
                     type="text"
                     required
                     value={staticIp}
                     onChange={(e) => setStaticIp(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-sky-500"
+                    className="w-full bg-[#faf8f4] border border-[#dfd8c8] rounded-xl px-3 py-2 text-sm text-[#1e1c19] font-mono focus:outline-none focus:border-[#1e1c19]"
                   />
-                  <p className="text-[11px] text-slate-500 mt-1">
-                    Default Gateway: {selectedDept?.gateway}
+                  <p className="text-[11px] text-[#8c8477] mt-1 font-mono">
+                    Usable range for {selectedDept?.subnet}: .2 through .50
                   </p>
                 </div>
               )}
@@ -294,16 +275,16 @@ export const IPManager = ({ departments, devices, onRefresh }) => {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition"
+                  className="px-4 py-2 bg-[#eae4d8] hover:bg-[#dfd8c8] text-[#554f45] rounded-xl text-sm font-semibold transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition shadow-lg shadow-emerald-600/20"
+                  className="px-4 py-2 bg-[#1e1c19] hover:bg-[#33302b] text-[#f7f4ed] rounded-xl text-sm font-semibold transition shadow-xs"
                 >
-                  {loading ? 'Spawning in PT...' : 'Spawn in Packet Tracer'}
+                  {loading ? 'Creating in PT...' : 'Spawn & Cable PC'}
                 </button>
               </div>
             </form>

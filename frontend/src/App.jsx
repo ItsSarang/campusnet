@@ -39,7 +39,7 @@ export function App() {
   }, [refreshAll]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#f7f4ed] text-[#1e1c19] flex flex-col font-sans">
       <Navbar currentTab={currentTab} onSelectTab={setCurrentTab} status={status} />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -62,10 +62,6 @@ export function App() {
           />
         )}
       </main>
-
-      <footer className="border-t border-slate-900 bg-slate-950 py-4 text-center text-xs text-slate-500">
-        CampusNet | Computer Networks College Project | Cisco Packet Tracer Engine Port 39000
-      </footer>
     </div>
   );
 }
