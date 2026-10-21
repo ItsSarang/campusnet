@@ -26,6 +26,7 @@ import {
   Trash2,
   Play,
   ShieldAlert,
+  Globe,
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -34,42 +35,39 @@ const BuildingNode = ({ data }) => {
   return (
     <div
       style={{
-        width: data.width || 360,
-        height: data.height || 260,
+        width: data.width || 380,
+        height: data.height || 280,
         borderColor: isCut ? '#ef4444' : '#dfd8c8',
         backgroundColor: isCut ? 'rgba(254, 242, 242, 0.75)' : 'rgba(255, 255, 255, 0.5)',
       }}
       className={`rounded-2xl border-2 border-dashed transition-all duration-300 pointer-events-auto p-4 flex flex-col justify-between ${
-        isCut ? 'shadow-md shadow-rose-100 ring-2 ring-rose-300' : 'shadow-sm'
+        isCut ? 'shadow-md shadow-rose-100 ring-2 ring-rose-300' : 'shadow-xs'
       }`}
     >
-      <div className="flex items-center justify-between pb-2 border-b border-[#dfd8c8]/80">
-        <div className="flex items-center space-x-2">
+      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#dfd8c8]/80 whitespace-nowrap">
+        <div className="flex items-center space-x-2 min-w-0">
           <span
             className="w-2.5 h-2.5 rounded-full flex-shrink-0"
             style={{ backgroundColor: data.color }}
           />
-          <div>
-            <h4 className="text-xs font-bold text-[#1e1c19] tracking-tight">
-              {data.name}
-            </h4>
-            <div className="flex items-center space-x-1.5 mt-0.5">
-              <span className="text-[10px] font-mono text-[#706b63]">
-                {data.subnet}
-              </span>
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#eae4d8] text-[#554f45] border border-[#dfd8c8] font-semibold">
-                VLAN {data.vlan}
-              </span>
-            </div>
-          </div>
+          <h4 className="text-xs font-bold text-[#1e1c19] tracking-tight truncate">
+            {data.name}
+          </h4>
+          <span className="text-[10px] font-mono text-[#706b63]">
+            {data.subnet}
+          </span>
+          {data.vlan > 0 && (
+            <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#eae4d8] text-[#554f45] border border-[#dfd8c8] font-semibold">
+              VLAN {data.vlan}
+            </span>
+          )}
         </div>
 
-        {data.departmentId !== 'core' && (
-          <div className="flex items-center space-x-1.5">
+        {data.departmentId !== 'core' && data.departmentId !== 'isp' && (
+          <div className="flex items-center space-x-1.5 flex-shrink-0">
             <button
               onClick={() => data.onOpenAddModal(data.departmentId)}
-              className="flex items-center space-x-1 px-2 py-1 rounded bg-white hover:bg-sky-50 text-sky-700 hover:text-sky-800 border border-[#dfd8c8] hover:border-sky-300 text-[11px] font-semibold shadow-xs transition"
-              title="Add Workstation"
+              className="flex items-center space-x-1 px-2.5 py-1 rounded bg-white hover:bg-sky-50 text-sky-700 hover:text-sky-800 border border-[#dfd8c8] hover:border-sky-300 text-[11px] font-semibold shadow-xs transition"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add PC</span>
@@ -77,7 +75,7 @@ const BuildingNode = ({ data }) => {
 
             <button
               onClick={() => data.onToggleLink(data.departmentId)}
-              className={`flex items-center space-x-1 px-2 py-1 rounded text-[11px] font-semibold border transition ${
+              className={`flex items-center space-x-1 px-2.5 py-1 rounded text-[11px] font-semibold border transition ${
                 isCut
                   ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-600 shadow-xs'
                   : 'bg-white hover:bg-rose-50 text-[#706b63] hover:text-rose-600 border-[#dfd8c8] hover:border-rose-300'
@@ -114,37 +112,64 @@ const BuildingNode = ({ data }) => {
   );
 };
 
-const RouterNode = ({ data, selected }) => (
-  <div className="flex flex-col items-center group cursor-pointer">
-    <Handle type="target" position={Position.Top} className="!bg-indigo-600 !w-2 !h-2" />
-    <div
-      className={`relative w-14 h-14 rounded-full bg-white border-2 flex items-center justify-center transition-all duration-200 shadow-sm ${
-        selected
-          ? 'border-indigo-600 ring-4 ring-indigo-500/20 shadow-md scale-105'
-          : 'border-indigo-500 hover:border-indigo-600 hover:shadow-md'
-      }`}
-    >
-      <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
-        <Cpu className="w-6 h-6" />
+const RouterNode = ({ data, selected }) => {
+  const isIsp = data.label === 'ISP-Edge-Router';
+  return (
+    <div className="flex flex-col items-center group cursor-pointer relative">
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="!top-1/2 !left-1/2 !transform -translate-x-1/2 -translate-y-1/2 !w-1 !h-1 !opacity-0 !pointer-events-none"
+      />
+      <div
+        className={`relative w-14 h-14 rounded-full bg-white border-2 flex items-center justify-center transition-all duration-200 shadow-sm ${
+          selected
+            ? isIsp
+              ? 'border-slate-800 ring-4 ring-slate-400/20 shadow-md scale-105'
+              : 'border-indigo-600 ring-4 ring-indigo-500/20 shadow-md scale-105'
+            : isIsp
+            ? 'border-slate-600 hover:border-slate-800 hover:shadow-md'
+            : 'border-indigo-500 hover:border-indigo-600 hover:shadow-md'
+        }`}
+      >
+        <div
+          className={`w-10 h-10 rounded-full flex items-center justify-center ${
+            isIsp ? 'bg-slate-100 text-slate-700' : 'bg-indigo-50 text-indigo-600'
+          }`}
+        >
+          {isIsp ? <Globe className="w-6 h-6" /> : <Cpu className="w-6 h-6" />}
+        </div>
+        <span className="absolute top-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white" />
       </div>
-      <span className="absolute top-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white" />
-    </div>
 
-    <div className="mt-1.5 text-center pointer-events-none">
-      <div className="text-[11px] font-bold text-[#1e1c19] tracking-tight whitespace-nowrap">
-        {data.label}
+      <div className="mt-1.5 text-center pointer-events-none">
+        <div className="text-[11px] font-bold text-[#1e1c19] tracking-tight whitespace-nowrap">
+          {data.label}
+        </div>
+        <div
+          className={`text-[9px] font-mono font-medium ${
+            isIsp ? 'text-slate-600' : 'text-indigo-700'
+          }`}
+        >
+          {isIsp ? 'Outside Internet Gateway' : 'Core Router 2911'}
+        </div>
       </div>
-      <div className="text-[9px] font-mono text-indigo-700 font-medium">
-        Core Router 2911
-      </div>
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="!top-1/2 !left-1/2 !transform -translate-x-1/2 -translate-y-1/2 !w-1 !h-1 !opacity-0 !pointer-events-none"
+      />
     </div>
-    <Handle type="source" position={Position.Bottom} className="!bg-indigo-600 !w-2 !h-2" />
-  </div>
-);
+  );
+};
 
 const SwitchNode = ({ data, selected }) => (
-  <div className="flex flex-col items-center group cursor-pointer">
-    <Handle type="target" position={Position.Top} className="!bg-sky-600 !w-2 !h-2" />
+  <div className="flex flex-col items-center group cursor-pointer relative">
+    <Handle
+      type="target"
+      position={Position.Top}
+      className="!top-1/2 !left-1/2 !transform -translate-x-1/2 -translate-y-1/2 !w-1 !h-1 !opacity-0 !pointer-events-none"
+    />
     <div
       className={`relative w-16 h-11 rounded-lg bg-white border-2 flex items-center justify-between px-2 transition-all duration-200 shadow-sm ${
         selected
@@ -177,13 +202,21 @@ const SwitchNode = ({ data, selected }) => (
         2960-24TT Switch
       </div>
     </div>
-    <Handle type="source" position={Position.Bottom} className="!bg-sky-600 !w-2 !h-2" />
+    <Handle
+      type="source"
+      position={Position.Bottom}
+      className="!top-1/2 !left-1/2 !transform -translate-x-1/2 -translate-y-1/2 !w-1 !h-1 !opacity-0 !pointer-events-none"
+    />
   </div>
 );
 
 const HostNode = ({ data, selected }) => (
-  <div className="flex flex-col items-center group cursor-pointer">
-    <Handle type="target" position={Position.Top} className="!bg-emerald-600 !w-2 !h-2" />
+  <div className="flex flex-col items-center group cursor-pointer relative">
+    <Handle
+      type="target"
+      position={Position.Top}
+      className="!top-1/2 !left-1/2 !transform -translate-x-1/2 -translate-y-1/2 !w-1 !h-1 !opacity-0 !pointer-events-none"
+    />
     <div
       className={`relative w-12 h-12 rounded-xl bg-white border-2 flex items-center justify-center transition-all duration-200 shadow-sm ${
         selected
@@ -205,13 +238,21 @@ const HostNode = ({ data, selected }) => (
         {data.ip || 'DHCP Host'}
       </div>
     </div>
-    <Handle type="source" position={Position.Bottom} className="!bg-emerald-600 !w-2 !h-2" />
+    <Handle
+      type="source"
+      position={Position.Bottom}
+      className="!top-1/2 !left-1/2 !transform -translate-x-1/2 -translate-y-1/2 !w-1 !h-1 !opacity-0 !pointer-events-none"
+    />
   </div>
 );
 
 const ServerNode = ({ data, selected }) => (
-  <div className="flex flex-col items-center group cursor-pointer">
-    <Handle type="target" position={Position.Top} className="!bg-amber-600 !w-2 !h-2" />
+  <div className="flex flex-col items-center group cursor-pointer relative">
+    <Handle
+      type="target"
+      position={Position.Top}
+      className="!top-1/2 !left-1/2 !transform -translate-x-1/2 -translate-y-1/2 !w-1 !h-1 !opacity-0 !pointer-events-none"
+    />
     <div
       className={`relative w-12 h-14 rounded-xl bg-white border-2 flex flex-col items-center justify-center transition-all duration-200 shadow-sm ${
         selected
@@ -236,7 +277,11 @@ const ServerNode = ({ data, selected }) => (
         .100.10 DNS
       </div>
     </div>
-    <Handle type="source" position={Position.Bottom} className="!bg-amber-600 !w-2 !h-2" />
+    <Handle
+      type="source"
+      position={Position.Bottom}
+      className="!top-1/2 !left-1/2 !transform -translate-x-1/2 -translate-y-1/2 !w-1 !h-1 !opacity-0 !pointer-events-none"
+    />
   </div>
 );
 
@@ -393,11 +438,11 @@ export const Topology = () => {
     }
   };
 
-  const handleQuickPing = async (sourceName) => {
+  const handleQuickPing = async (sourceName, targetIp) => {
     setPingRunning(true);
     setPingResult(null);
     try {
-      const res = await api.simulatePing(sourceName, '192.168.100.10');
+      const res = await api.simulatePing(sourceName, targetIp);
       setPingResult(res);
     } catch (err) {
       setPingResult({ success: false, output: err.message });
@@ -442,6 +487,12 @@ export const Topology = () => {
       ) {
         paths.add(e.id);
       }
+      if (
+        (e.source === 'Campus-Core-Router' && e.target === 'ISP-Edge-Router') ||
+        (e.target === 'Campus-Core-Router' && e.source === 'ISP-Edge-Router')
+      ) {
+        paths.add(e.id);
+      }
     });
 
     return paths;
@@ -453,6 +504,7 @@ export const Topology = () => {
       if (e.isCut) {
         return {
           ...e,
+          type: 'straight',
           label: '[SEVERED]',
           style: { stroke: '#ef4444', strokeWidth: 3, strokeDasharray: '6,6' },
         };
@@ -462,6 +514,7 @@ export const Topology = () => {
         if (isHighlighted) {
           return {
             ...e,
+            type: 'straight',
             label: null,
             style: { stroke: '#4f46e5', strokeWidth: 3.5 },
             animated: true,
@@ -469,14 +522,16 @@ export const Topology = () => {
         }
         return {
           ...e,
+          type: 'straight',
           label: null,
-          style: { stroke: '#d6cfc4', strokeWidth: 1.5, opacity: 0.6 },
+          style: { stroke: '#d6cfc4', strokeWidth: 1.5, opacity: 0.5 },
           animated: false,
         };
       }
 
       return {
         ...e,
+        type: 'straight',
         label: null,
         style: { stroke: '#827666', strokeWidth: 2 },
         animated: false,
@@ -489,9 +544,9 @@ export const Topology = () => {
       <div className="flex items-center justify-between bg-[#f4f0e8] p-4 rounded-xl border border-[#dfd8c8] shadow-xs">
         <div>
           <h2 className="text-lg font-bold text-[#1e1c19] flex items-center space-x-2">
-            <span>Campus Network Topology</span>
+            <span>Enterprise Campus Network Interconnect</span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-[#eae4d8] text-[#554f45] border border-[#dfd8c8] font-mono">
-              Academic Blocks
+              3-Tier Architecture
             </span>
             {cutDepartments.length > 0 && (
               <span className="px-2 py-0.5 text-xs font-bold bg-rose-100 text-rose-700 border border-rose-300 rounded-full flex items-center space-x-1 animate-pulse">
@@ -501,7 +556,7 @@ export const Topology = () => {
             )}
           </h2>
           <p className="text-xs text-[#706b63]">
-            Physical building zones and clean interconnects synchronized live with Cisco Packet Tracer.
+            Multi-building topology, external ISP transit gateway, and Cisco Packet Tracer live synchronization.
           </p>
         </div>
 
@@ -514,7 +569,7 @@ export const Topology = () => {
             className="flex items-center space-x-2 px-3.5 py-1.5 bg-white hover:bg-[#eae4d8] text-[#1e1c19] rounded-lg text-sm font-medium border border-[#dfd8c8] shadow-xs transition"
           >
             <Table className="w-4 h-4 text-indigo-600" />
-            <span>Routing Table</span>
+            <span>Inter-VLAN & WAN Routing Table</span>
             <span className="px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-800 text-xs font-semibold font-mono">
               {routesData.routes.length}
             </span>
@@ -589,7 +644,7 @@ export const Topology = () => {
         </div>
 
         {selectedNode && (
-          <aside className="w-80 min-w-80 bg-[#f4f0e8] border-l border-[#dfd8c8] p-5 flex flex-col justify-between overflow-y-auto z-10 shadow-lg">
+          <aside className="w-84 min-w-84 bg-[#f4f0e8] border-l border-[#dfd8c8] p-5 flex flex-col justify-between overflow-y-auto z-10 shadow-lg">
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-[#dfd8c8]">
                 <div>
@@ -676,16 +731,25 @@ export const Topology = () => {
                 {selectedNode.data?.kind === 'host' && (
                   <div>
                     <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold mb-1">
-                      DIAGNOSTIC TEST
+                      DIAGNOSTIC CONNECTIVITY TESTS
                     </div>
                     <div className="bg-white p-2.5 rounded-lg border border-[#dfd8c8] space-y-2">
                       <button
-                        onClick={() => handleQuickPing(selectedNode.data?.label)}
+                        onClick={() => handleQuickPing(selectedNode.data?.label, '192.168.100.10')}
                         disabled={pingRunning}
                         className="w-full py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded text-xs font-semibold flex items-center justify-center space-x-1.5 transition"
                       >
                         <Play className={`w-3.5 h-3.5 ${pingRunning ? 'animate-spin' : ''}`} />
-                        <span>{pingRunning ? 'Pinging DNS Server...' : 'Ping DNS Server (.100.10)'}</span>
+                        <span>Ping Campus Server (.100.10)</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleQuickPing(selectedNode.data?.label, '8.8.8.8')}
+                        disabled={pingRunning}
+                        className="w-full py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold flex items-center justify-center space-x-1.5 transition"
+                      >
+                        <Globe className={`w-3.5 h-3.5 ${pingRunning ? 'animate-spin' : ''}`} />
+                        <span>Ping Outside Internet (8.8.8.8)</span>
                       </button>
 
                       {pingResult && (
@@ -718,7 +782,7 @@ export const Topology = () => {
                   <span>{deletingDevice ? 'Deleting...' : 'Delete PC'}</span>
                 </button>
               ) : (
-                <span className="text-[11px] text-[#706b63] font-mono">Protected Device</span>
+                <span className="text-[11px] text-[#706b63] font-mono">Infrastructure Node</span>
               )}
 
               <button
@@ -732,14 +796,14 @@ export const Topology = () => {
         )}
 
         {routesDrawerOpen && (
-          <div className="absolute right-4 top-4 bottom-4 w-[460px] bg-[#f4f0e8] border border-[#dfd8c8] rounded-xl p-5 shadow-2xl z-20 flex flex-col justify-between">
+          <div className="absolute right-4 top-4 bottom-4 w-[480px] bg-[#f4f0e8] border border-[#dfd8c8] rounded-xl p-5 shadow-2xl z-20 flex flex-col justify-between">
             <div className="flex-1 flex flex-col overflow-hidden">
               <div className="flex items-center justify-between pb-3 border-b border-[#dfd8c8]">
                 <div className="flex items-center space-x-2">
                   <Table className="w-5 h-5 text-indigo-700" />
                   <div>
                     <h3 className="font-bold text-[#1e1c19] text-base">
-                      Campus-Core-Router Routing Table
+                      Campus Core & WAN Routing Table
                     </h3>
                     <p className="text-[11px] text-[#706b63] font-mono">
                       Live Cisco IOS 15.1 (show ip route)
@@ -782,7 +846,7 @@ export const Topology = () => {
                         <tr>
                           <th className="px-3 py-2">Code</th>
                           <th className="px-3 py-2">Network Prefix</th>
-                          <th className="px-3 py-2">Interface</th>
+                          <th className="px-3 py-2">Target / Next Hop</th>
                           <th className="px-3 py-2">Type</th>
                         </tr>
                       </thead>
@@ -794,6 +858,8 @@ export const Topology = () => {
                                 className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                                   r.code === 'C'
                                     ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                    : r.code === 'S*'
+                                    ? 'bg-amber-100 text-amber-800 border border-amber-300'
                                     : 'bg-sky-100 text-sky-800 border border-sky-300'
                                 }`}
                               >
@@ -818,11 +884,15 @@ export const Topology = () => {
                   <div className="mt-2 flex items-center space-x-3 text-[10px] text-[#706b63]">
                     <span className="flex items-center space-x-1">
                       <span className="w-2 h-2 rounded-full bg-emerald-600" />
-                      <span>C: Directly Connected</span>
+                      <span>C: Connected</span>
                     </span>
                     <span className="flex items-center space-x-1">
                       <span className="w-2 h-2 rounded-full bg-sky-600" />
-                      <span>L: Local Interface IP</span>
+                      <span>L: Local Interface</span>
+                    </span>
+                    <span className="flex items-center space-x-1">
+                      <span className="w-2 h-2 rounded-full bg-amber-600" />
+                      <span>S*: Default WAN Route</span>
                     </span>
                   </div>
                 </div>
@@ -875,7 +945,7 @@ export const Topology = () => {
             </div>
 
             <div className="pt-3 border-t border-[#dfd8c8] text-[11px] text-[#706b63] flex justify-between items-center font-mono">
-              <span>802.1Q SVI Protocol</span>
+              <span>Dynamic Routing Engine Active</span>
               <button
                 onClick={() => setRoutesDrawerOpen(false)}
                 className="px-3 py-1 bg-white hover:bg-[#eae4d8] border border-[#dfd8c8] text-[#1e1c19] rounded text-xs transition"

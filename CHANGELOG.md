@@ -10,6 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Option B Multi-Router WAN Edge & Internet Gateway Integration:**
+  - Added `ISP-Edge-Router` (Cisco 2911) representing an external Internet Service Provider on public subnet `203.0.113.0/30`.
+  - Configured `Loopback0` on `ISP-Edge-Router` representing simulated public internet destination `8.8.8.8` (Google Public DNS).
+  - Configured default static route `ip route 0.0.0.0 0.0.0.0 203.0.113.2` on `Campus-Core-Router` with real-time routing table parsing.
+  - Verified live ICMP end-to-end ping from campus workstations to `8.8.8.8` across the campus core and WAN gateway link.
+- **Topology Canvas Overhaul & ASAG Paper Theme:**
+  - Canvas redesigned with warm off-white paper theme (`#f7f4ed`), clean CAD/Visio straight-line connections, and zero cable text clutter.
+  - Authentic Cisco networking node symbols (Router, Switch, Workstation, Server) with centered connection handles.
+  - Dynamic department block height resizing based on device count and row calculations.
+  - Clean single-line block headers with inline status dot, VLAN tag, subnet badge, and direct `+ Add PC` and `Cut/Repair Link` buttons.
+  - In-canvas workstation provisioning modal and side-panel device deletion button.
+  - Full end-to-end active path highlighting tracing through access switch, distribution switch, core router, and ISP edge router.
 - **Cisco Packet Tracer 9.0 Live Engine Integration:**
   - Integrated Cisco Packet Tracer 9.0 as the live network data plane via local PTMP IPC on port 39000.
   - Authored baseline campus topology in `packet-tracer/campusnet_backbone.pkt`.

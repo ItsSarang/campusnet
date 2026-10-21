@@ -13,7 +13,23 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 
 ## Implemented Features
 
-### 1. Cisco Packet Tracer 9.0 Live Engine Integration:
+### 1. Option B Multi-Router WAN Edge & Internet Gateway Integration:
+- Configured external `ISP-Edge-Router` (Cisco 2911) outside the campus boundary on WAN subnet `203.0.113.0/30`.
+- Configured public destination `8.8.8.8` (Google Public DNS) on `ISP-Edge-Router` Loopback0.
+- Configured default static route `ip route 0.0.0.0 0.0.0.0 203.0.113.2` on `Campus-Core-Router`.
+- Live Cisco IOS routing table parser extracts Gateway of Last Resort and `S* 0.0.0.0/0` default route.
+- Verified live end-to-end ping from academic PCs (e.g., `CS-PC-01`) through the campus core and WAN gateway to `8.8.8.8` (0% packet loss).
+
+### 2. Topology Canvas Overhaul & ASAG Paper Theme:
+- Styled topology canvas with ASAG warm off-white paper theme (`#f7f4ed`), subtle dots grid, and clean card styling.
+- Authentic networking node symbols (Router, Switch, Workstation PC, Server) with centered port handles and clean straight-line CAD/Visio connections without cable text clutter.
+- Dynamic department block height resizing based on host counts.
+- Single-line department block headers with inline status dot, VLAN tag, subnet badge, and direct `+ Add PC` and `Cut/Repair Link` buttons.
+- In-canvas modal for provisioning workstations directly into any department.
+- Side-panel device inspector with workstation de-provisioning (`Delete Workstation`) and quick ping buttons for both intra-campus and external internet (`8.8.8.8`).
+- End-to-end active path highlighting tracing from selected host through access switch, distribution switch, core router, to external ISP gateway.
+
+### 3. Cisco Packet Tracer 9.0 Live Engine Integration:
 - Configured baseline campus network topology (`packet-tracer/campusnet_backbone.pkt`) with `Campus-Core-Router` (2911), `Core-Dist-SW` (2960), and 4 department access switches (`SW-CS`, `SW-LIB`, `SW-ADMIN`, `SW-SERVERS`).
 - Configured Inter-VLAN routing (`dot1Q` sub-interfaces for VLAN 10, 20, 30, 100) and DHCP server pools on the Core Router.
 - Built native IPC bridge (`backend/bin/pktctl`) connecting Python to Packet Tracer over local TCP port 39000.
@@ -68,8 +84,9 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 - **PTMP Socket Connection:** Verified `status` returns `connected: true`, `addr: 127.0.0.1:39000`, `pt_version: 9.0.0.0810`.
 - **Cisco IOS CLI Execution:** Verified `show ip interface brief` executed on `Campus-Core-Router` returning sub-interface states `up/up`.
 - **Workstation Provisioning:** Verified `POST /api/devices/add` dynamically spawned `CS-PC-01` in Packet Tracer and cabled it to `SW-CS:FastEthernet0/2`.
-- **Live ICMP Ping:** Verified `CS-PC-01` successfully pinged gateway `192.168.10.1` (4/4 received, 0% loss) and inter-VLAN pinged DNS Server `192.168.100.10` (3/4 received, 10ms avg round trip).
-- **Frontend Production Build:** Verified `npm run build` compiled 1,748 modules with zero TypeScript or Vite errors.
+- **Live ICMP Ping:** Verified `CS-PC-01` successfully pinged gateway `192.168.10.1` (4/4 received, 0% loss), inter-VLAN pinged DNS Server `192.168.100.10` (4/4 received), and pinged simulated outside internet gateway `8.8.8.8` through `ISP-Edge-Router` (4/4 received, 0% loss).
+- **Routing Table Sync:** Verified `Campus-Core-Router` live routing table reflects default static route `S* 0.0.0.0/0 via 203.0.113.2` and Gateway of Last Resort.
+- **Frontend Production Build:** Verified `npm run build` compiled 1,748 modules with zero errors.
 
 ---
 
