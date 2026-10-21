@@ -297,8 +297,10 @@ export const Topology = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [selectedEdge, setSelectedEdge] = useState(null);
   const [loading, setLoading] = useState(false);
   const [cutDepartments, setCutDepartments] = useState([]);
+  const [cutEdges, setCutEdges] = useState([]);
   const [routesDrawerOpen, setRoutesDrawerOpen] = useState(false);
   const [routesData, setRoutesData] = useState({ tables: [], routes: [], history: [], raw: '' });
   const [routesLoading, setRoutesLoading] = useState(false);
@@ -326,7 +328,9 @@ export const Topology = () => {
     try {
       const data = await api.getTopology();
       const cutList = data.cutDepartments || [];
+      const edgeCutList = data.cutEdges || [];
       setCutDepartments(cutList);
+      setCutEdges(edgeCutList);
 
       const buildingNodes = (data.buildings || []).map((b) => ({
         id: b.id,
@@ -394,6 +398,34 @@ export const Topology = () => {
     }
   };
 
+  const handleToggleEdge = async (edgeId) => {
+    try {
+      const edge = edges.find((e) => e.id === edgeId) || selectedEdge;
+      const res = await api.toggleLink({ edgeId });
+      if (res.success) {
+        const isNowCut = res.isCut;
+        if (isNowCut) {
+          setBannerAlert({
+            type: 'error',
+            message: `Physical carrier severed: ${edge?.categoryLabel || edgeId}. Link is DOWN.`,
+          });
+        } else {
+          setBannerAlert({
+            type: 'success',
+            message: `Physical carrier restored: ${edge?.categoryLabel || edgeId}. Link is UP.`,
+          });
+        }
+        await loadTopology();
+        await loadRoutes();
+        if (selectedEdge && selectedEdge.id === edgeId) {
+          setSelectedEdge((prev) => (prev ? { ...prev, isCut: isNowCut } : null));
+        }
+      }
+    } catch (e) {
+      console.error('Failed to toggle edge', e);
+    }
+  };
+
   const handleCreateDevice = async (e) => {
     e.preventDefault();
     if (!newDeviceName.trim()) return;
@@ -458,9 +490,21 @@ export const Topology = () => {
 
   const onNodeClick = (_, node) => {
     if (node.type !== 'buildingNode') {
+      setSelectedEdge(null);
       setSelectedNode(node);
       setPingResult(null);
     }
+  };
+
+  const onEdgeClick = (_, edge) => {
+    setSelectedNode(null);
+    setSelectedEdge(edge);
+    setPingResult(null);
+  };
+
+  const onPaneClick = () => {
+    setSelectedNode(null);
+    setSelectedEdge(null);
   };
 
   const activePathEdges = useMemo(() => {
@@ -509,13 +553,30 @@ export const Topology = () => {
 
   const styledEdges = useMemo(() => {
     return edges.map((e) => {
+      const isSelected = selectedEdge && selectedEdge.id === e.id;
       const isHighlighted = activePathEdges.has(e.id);
+
       if (e.isCut) {
         return {
           ...e,
           type: 'straight',
           label: '[SEVERED]',
-          style: { stroke: '#ef4444', strokeWidth: 3, strokeDasharray: '6,6' },
+          labelStyle: { fill: '#b91c1c', fontWeight: 700, fontSize: 10, fontFamily: 'monospace' },
+          labelBgStyle: { fill: '#fee2e2', stroke: '#fca5a5', strokeWidth: 1, rx: 4, ry: 4 },
+          labelBgPadding: [6, 2],
+          style: isSelected
+            ? { stroke: '#ef4444', strokeWidth: 4, strokeDasharray: '6,6' }
+            : { stroke: '#ef4444', strokeWidth: 3, strokeDasharray: '6,6' },
+        };
+      }
+
+      if (isSelected) {
+        return {
+          ...e,
+          type: 'straight',
+          label: null,
+          style: { stroke: '#6366f1', strokeWidth: 4 },
+          animated: true,
         };
       }
 
@@ -546,7 +607,7 @@ export const Topology = () => {
         animated: false,
       };
     });
-  }, [edges, selectedNode, activePathEdges]);
+  }, [edges, selectedNode, selectedEdge, activePathEdges]);
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col space-y-4">
@@ -557,10 +618,10 @@ export const Topology = () => {
             <span className="text-xs px-2 py-0.5 rounded-full bg-[#eae4d8] text-[#554f45] border border-[#dfd8c8] font-mono">
               3-Tier Architecture
             </span>
-            {cutDepartments.length > 0 && (
+            {cutEdges.length > 0 && (
               <span className="px-2 py-0.5 text-xs font-bold bg-rose-100 text-rose-700 border border-rose-300 rounded-full flex items-center space-x-1 animate-pulse">
                 <ShieldAlert className="w-3.5 h-3.5" />
-                <span>{cutDepartments.length} Link Severed</span>
+                <span>{cutEdges.length} Cables Severed</span>
               </span>
             )}
           </h2>
@@ -613,15 +674,6 @@ export const Topology = () => {
           </div>
 
           <div className="flex items-center space-x-3">
-            {bannerAlert.type === 'error' && (
-              <button
-                onClick={() => handleToggleLink(bannerAlert.departmentId)}
-                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold transition flex items-center space-x-1 shadow-xs"
-              >
-                <Wrench className="w-3 h-3" />
-                <span>Repair Cable</span>
-              </button>
-            )}
             <button
               onClick={() => setBannerAlert(null)}
               className="text-[#706b63] hover:text-[#1e1c19]"
@@ -640,6 +692,8 @@ export const Topology = () => {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onNodeClick={onNodeClick}
+            onEdgeClick={onEdgeClick}
+            onPaneClick={onPaneClick}
             nodeTypes={nodeTypes}
             fitView
             className="bg-[#f7f4ed]"
@@ -811,6 +865,123 @@ export const Topology = () => {
 
               <button
                 onClick={() => setSelectedNode(null)}
+                className="px-3 py-1.5 bg-white hover:bg-[#eae4d8] border border-[#dfd8c8] text-[#1e1c19] rounded text-xs font-medium transition"
+              >
+                Close
+              </button>
+            </div>
+          </aside>
+        )}
+
+        {selectedEdge && !selectedNode && (
+          <aside className="w-84 min-w-84 bg-[#f4f0e8] border-l border-[#dfd8c8] p-5 flex flex-col justify-between overflow-y-auto z-10 shadow-lg">
+            <div>
+              <div className="flex items-center justify-between pb-3 border-b border-[#dfd8c8]">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#7a7266] font-semibold">
+                    CABLE INSPECTOR
+                  </span>
+                  <h3 className="text-sm font-bold text-[#1e1c19] tracking-tight mt-0.5 truncate">
+                    {selectedEdge.categoryLabel || selectedEdge.id}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setSelectedEdge(null)}
+                  className="text-[#706b63] hover:text-[#1e1c19] p-1 rounded hover:bg-[#eae4d8]"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="mt-4 space-y-4 text-xs font-mono">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold mb-1">
+                    LINK ENDPOINTS
+                  </div>
+                  <div className="bg-white p-3 rounded-lg border border-[#dfd8c8] space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#706b63]">Endpoint A</span>
+                      <span className="text-[#1e1c19] font-bold">{selectedEdge.source}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-[#706b63]">
+                      <span>Port</span>
+                      <span className="text-indigo-800 font-semibold">{selectedEdge.portA || 'Auto'}</span>
+                    </div>
+                    <div className="border-t border-[#dfd8c8] my-1" />
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#706b63]">Endpoint B</span>
+                      <span className="text-[#1e1c19] font-bold">{selectedEdge.target}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-[#706b63]">
+                      <span>Port</span>
+                      <span className="text-indigo-800 font-semibold">{selectedEdge.portB || 'Auto'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold mb-1">
+                    PHYSICAL CARRIER STATE
+                  </div>
+                  <div className="bg-white p-3 rounded-lg border border-[#dfd8c8] space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#706b63]">Status</span>
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          selectedEdge.isCut
+                            ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                            : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        }`}
+                      >
+                        {selectedEdge.isCut ? 'SEVERED (NO CARRIER)' : 'ACTIVE (CONNECTED)'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#706b63]">Category</span>
+                      <span className="text-[#1e1c19] capitalize font-sans text-[11px]">
+                        {selectedEdge.category ? selectedEdge.category.replace('_', ' ') : 'Network Link'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedEdge.impact && (
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold mb-1">
+                      TOPOLOGICAL IMPACT
+                    </div>
+                    <div className="bg-[#eae4d8] p-3 rounded-lg border border-[#dfd8c8] text-[11px] text-[#554f45] font-sans leading-relaxed">
+                      {selectedEdge.impact}
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-2">
+                  {selectedEdge.isCut ? (
+                    <button
+                      onClick={() => handleToggleEdge(selectedEdge.id)}
+                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-2 transition shadow-xs"
+                    >
+                      <Wrench className="w-4 h-4" />
+                      <span>Repair Cable (Restore Carrier)</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleToggleEdge(selectedEdge.id)}
+                      className="w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 rounded-lg text-xs font-bold flex items-center justify-center space-x-2 transition"
+                    >
+                      <Scissors className="w-4 h-4" />
+                      <span>Cut Cable (Sever Link)</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-[#dfd8c8] flex items-center justify-between">
+              <span className="text-[11px] text-[#706b63] font-mono">Carrier Ethernet</span>
+              <button
+                onClick={() => setSelectedEdge(null)}
                 className="px-3 py-1.5 bg-white hover:bg-[#eae4d8] border border-[#dfd8c8] text-[#1e1c19] rounded text-xs font-medium transition"
               >
                 Close

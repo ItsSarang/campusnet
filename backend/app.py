@@ -116,25 +116,28 @@ ROUTER_CONFIGS = [
 ]
 
 ROUTER_GRAPH_EDGES = [
-    ("Router-CS", "Campus-Core-Router", "dept-cs"),
-    ("Router-LIB", "Campus-Core-Router", "dept-lib"),
-    ("Router-ADMIN", "Campus-Core-Router", "dept-admin"),
-    ("Router-DC", "Campus-Core-Router", "dept-dc"),
-    ("Router-CS", "Router-LIB", None),
-    ("Router-ADMIN", "Router-DC", None),
-    ("Campus-Core-Router", "ISP-Edge-Router", None),
+    ("Router-CS", "Campus-Core-Router", "link-Router-CS-Campus-Core-Router"),
+    ("Router-LIB", "Campus-Core-Router", "link-Router-LIB-Campus-Core-Router"),
+    ("Router-ADMIN", "Campus-Core-Router", "link-Router-ADMIN-Campus-Core-Router"),
+    ("Router-DC", "Campus-Core-Router", "link-Router-DC-Campus-Core-Router"),
+    ("Router-CS", "Router-LIB", "link-Router-CS-Router-LIB"),
+    ("Router-ADMIN", "Router-DC", "link-Router-ADMIN-Router-DC"),
+    ("Campus-Core-Router", "ISP-Edge-Router", "link-Campus-Core-Router-ISP-Edge-Router"),
 ]
 
-def compute_router_tables(cut_depts=None):
-    if cut_depts is None:
-        cut_depts = set()
+CUT_EDGES = set()
+CUT_DEPARTMENTS = set()
+
+def compute_router_tables(cut_edges=None):
+    if cut_edges is None:
+        cut_edges = CUT_EDGES
     else:
-        cut_depts = set(cut_depts)
+        cut_edges = set(cut_edges)
 
     router_names = [rc["name"] for rc in ROUTER_CONFIGS]
     adj = {r: [] for r in router_names}
-    for u, v, dept in ROUTER_GRAPH_EDGES:
-        if dept and dept in cut_depts:
+    for u, v, edge_id in ROUTER_GRAPH_EDGES:
+        if edge_id in cut_edges:
             continue
         adj[u].append(v)
         adj[v].append(u)
@@ -261,8 +264,6 @@ BUILDINGS = [
         "height": 460,
     },
 ]
-
-CUT_DEPARTMENTS = set()
 
 EVENT_LOGS = [
     {
@@ -669,122 +670,170 @@ def get_topology():
                 )
 
         edges = []
-        edge_idx = 0
 
+        is_wan_cut = "link-Campus-Core-Router-ISP-Edge-Router" in CUT_EDGES
         edges.append(
             {
-                "id": f"link-{edge_idx}-Campus-Core-Router-ISP-Edge-Router",
+                "id": "link-Campus-Core-Router-ISP-Edge-Router",
                 "source": "Campus-Core-Router",
                 "target": "ISP-Edge-Router",
-                "label": None,
-                "animated": True,
-                "isCut": False,
+                "category": "wan_gateway",
+                "categoryLabel": "Campus Internet WAN Gateway (8.8.8.8)",
+                "impact": "Severing cuts external internet access (8.8.8.8) campus-wide.",
+                "label": "[SEVERED]" if is_wan_cut else None,
+                "animated": not is_wan_cut,
+                "isCut": is_wan_cut,
                 "departmentId": None,
                 "portA": "GigabitEthernet0/1",
                 "portB": "GigabitEthernet0/0",
-                "style": {"stroke": "#827666", "strokeWidth": 2},
+                "style": (
+                    {"stroke": "#ef4444", "strokeWidth": 3.5, "strokeDasharray": "6,6"}
+                    if is_wan_cut
+                    else {"stroke": "#827666", "strokeWidth": 2}
+                ),
             }
         )
-        edge_idx += 1
 
         for dept_id, (_, _, dept) in dept_layout_info.items():
-            is_cut = dept_id in CUT_DEPARTMENTS
-            edge_style = (
-                {"stroke": "#ef4444", "strokeWidth": 3, "strokeDasharray": "6,6"}
-                if is_cut
-                else {"stroke": "#827666", "strokeWidth": 2}
-            )
-            label_text = "[LINK SEVERED]" if is_cut else None
+            transit_id = f"link-{dept['router']}-Campus-Core-Router"
+            is_transit_cut = transit_id in CUT_EDGES or dept_id in CUT_DEPARTMENTS
 
             edges.append(
                 {
-                    "id": f"link-{edge_idx}-{dept['router']}-Campus-Core-Router",
+                    "id": transit_id,
                     "source": dept["router"],
                     "target": "Campus-Core-Router",
-                    "label": label_text,
-                    "animated": not is_cut,
-                    "isCut": is_cut,
+                    "category": "core_transit",
+                    "categoryLabel": f"{dept['name']} Core Transit Link",
+                    "impact": f"Severing forces Layer 3 traffic for {dept['name']} to reroute via lateral neighbor.",
+                    "label": "[SEVERED]" if is_transit_cut else None,
+                    "animated": not is_transit_cut,
+                    "isCut": is_transit_cut,
                     "departmentId": dept_id,
                     "portA": "GigabitEthernet0/1",
                     "portB": f"GigabitEthernet0/0.{dept['vlan']}",
-                    "style": edge_style,
+                    "style": (
+                        {"stroke": "#ef4444", "strokeWidth": 3.5, "strokeDasharray": "6,6"}
+                        if is_transit_cut
+                        else {"stroke": "#827666", "strokeWidth": 2}
+                    ),
                 }
             )
-            edge_idx += 1
 
+            gw_id = f"link-{dept['router']}-{dept['switch']}"
+            is_gw_cut = gw_id in CUT_EDGES
             edges.append(
                 {
-                    "id": f"link-{edge_idx}-{dept['router']}-{dept['switch']}",
+                    "id": gw_id,
                     "source": dept["router"],
                     "target": dept["switch"],
-                    "label": None,
-                    "animated": True,
-                    "isCut": False,
+                    "category": "gateway_uplink",
+                    "categoryLabel": f"{dept['name']} Gateway Trunk (192.168.{dept['vlan']}.1)",
+                    "impact": f"Severing isolates {dept['name']} workstations from router gateway and Inter-VLAN routing.",
+                    "label": "[SEVERED]" if is_gw_cut else None,
+                    "animated": not is_gw_cut,
+                    "isCut": is_gw_cut,
                     "departmentId": dept_id,
                     "portA": "GigabitEthernet0/0",
                     "portB": "FastEthernet0/1",
-                    "style": {"stroke": "#827666", "strokeWidth": 2},
+                    "style": (
+                        {"stroke": "#ef4444", "strokeWidth": 3.5, "strokeDasharray": "6,6"}
+                        if is_gw_cut
+                        else {"stroke": "#827666", "strokeWidth": 2}
+                    ),
                 }
             )
-            edge_idx += 1
 
+        is_cs_lib_cut = "link-Router-CS-Router-LIB" in CUT_EDGES
         edges.append(
             {
-                "id": f"link-{edge_idx}-Router-CS-Router-LIB",
+                "id": "link-Router-CS-Router-LIB",
                 "source": "Router-CS",
                 "target": "Router-LIB",
-                "label": None,
-                "animated": True,
-                "isCut": False,
+                "category": "lateral_mesh",
+                "categoryLabel": "Academic Block A - B Lateral Redundancy Link",
+                "impact": "Severing removes the direct failover bypass between CS and Library.",
+                "label": "[SEVERED]" if is_cs_lib_cut else None,
+                "animated": not is_cs_lib_cut,
+                "isCut": is_cs_lib_cut,
                 "departmentId": None,
                 "portA": "GigabitEthernet0/2",
                 "portB": "GigabitEthernet0/2",
-                "style": {"stroke": "#827666", "strokeWidth": 2},
+                "style": (
+                    {"stroke": "#ef4444", "strokeWidth": 3.5, "strokeDasharray": "6,6"}
+                    if is_cs_lib_cut
+                    else {"stroke": "#827666", "strokeWidth": 2}
+                ),
             }
         )
-        edge_idx += 1
 
+        is_admin_dc_cut = "link-Router-ADMIN-Router-DC" in CUT_EDGES
         edges.append(
             {
-                "id": f"link-{edge_idx}-Router-ADMIN-Router-DC",
+                "id": "link-Router-ADMIN-Router-DC",
                 "source": "Router-ADMIN",
                 "target": "Router-DC",
-                "label": None,
-                "animated": True,
-                "isCut": False,
+                "category": "lateral_mesh",
+                "categoryLabel": "Academic Block C - Data Center Lateral Redundancy Link",
+                "impact": "Severing removes the direct failover bypass between Admin and Data Center.",
+                "label": "[SEVERED]" if is_admin_dc_cut else None,
+                "animated": not is_admin_dc_cut,
+                "isCut": is_admin_dc_cut,
                 "departmentId": None,
                 "portA": "GigabitEthernet0/2",
                 "portB": "GigabitEthernet0/2",
-                "style": {"stroke": "#827666", "strokeWidth": 2},
+                "style": (
+                    {"stroke": "#ef4444", "strokeWidth": 3.5, "strokeDasharray": "6,6"}
+                    if is_admin_dc_cut
+                    else {"stroke": "#827666", "strokeWidth": 2}
+                ),
             }
         )
-        edge_idx += 1
 
         for dept_id, d_list in dept_devices.items():
             dept = DEPARTMENTS[dept_id]
             for host_idx, d in enumerate(d_list):
                 dev_name = d.get("name", "")
+                is_server = dev_name == "Campus-DNS-Server"
+                host_edge_id = f"link-{dept['switch']}-{dev_name}"
+                is_host_cut = host_edge_id in CUT_EDGES
+
                 edges.append(
                     {
-                        "id": f"link-{edge_idx}-{dept['switch']}-{dev_name}",
+                        "id": host_edge_id,
                         "source": dept["switch"],
                         "target": dev_name,
-                        "label": None,
-                        "animated": True,
-                        "isCut": False,
+                        "category": "server_uplink" if is_server else "access_port",
+                        "categoryLabel": (
+                            "Campus DNS & Web Server Infrastructure Link"
+                            if is_server
+                            else f"Workstation Access Patch Cord ({dev_name})"
+                        ),
+                        "impact": (
+                            "Severing takes central DNS and intranet server offline network-wide."
+                            if is_server
+                            else f"Severing disconnects {dev_name} from network (Physical link down)."
+                        ),
+                        "label": "[SEVERED]" if is_host_cut else None,
+                        "animated": not is_host_cut,
+                        "isCut": is_host_cut,
                         "departmentId": dept_id,
                         "portA": f"FastEthernet0/{host_idx + 2}",
                         "portB": "FastEthernet0",
-                        "style": {"stroke": "#827666", "strokeWidth": 2},
+                        "style": (
+                            {"stroke": "#ef4444", "strokeWidth": 3.5, "strokeDasharray": "6,6"}
+                            if is_host_cut
+                            else {"stroke": "#827666", "strokeWidth": 2}
+                        ),
                     }
                 )
-                edge_idx += 1
 
         return jsonify(
             {
                 "nodes": nodes,
                 "edges": edges,
                 "buildings": buildings,
+                "cutEdges": list(CUT_EDGES),
                 "cutDepartments": list(CUT_DEPARTMENTS),
             }
         )
@@ -796,77 +845,73 @@ def get_topology():
 @app.route("/api/topology/link/toggle", methods=["POST"])
 def toggle_link():
     data = request.json or {}
+    edge_id = data.get("edgeId")
     dept_id = data.get("departmentId")
     action = data.get("action", "toggle")
 
-    dept = DEPARTMENTS.get(dept_id)
-    if not dept:
-        return jsonify({"error": "Invalid department ID"}), 400
+    if dept_id and not edge_id:
+        dept = DEPARTMENTS.get(dept_id)
+        if dept:
+            edge_id = f"link-{dept['router']}-Campus-Core-Router"
 
-    sub_iface = f"GigabitEthernet0/0.{dept['vlan']}"
+    if not edge_id:
+        return jsonify({"error": "edgeId or departmentId required"}), 400
 
     if action == "toggle":
-        action = "restore" if dept_id in CUT_DEPARTMENTS else "cut"
+        action = "restore" if edge_id in CUT_EDGES else "cut"
 
     if action == "cut":
-        cmd = f"configure terminal\ninterface {sub_iface}\nshutdown\nend\n"
-        pt.run_cli("Campus-Core-Router", cmd)
-        CUT_DEPARTMENTS.add(dept_id)
-        log_event(
-            "OUTAGE",
-            f"Physical uplink severed for {dept['name']}. Subnet {dept['subnet']} unreachable.",
-        )
+        CUT_EDGES.add(edge_id)
+        for dept_k, dept_v in DEPARTMENTS.items():
+            if edge_id == f"link-{dept_v['router']}-Campus-Core-Router":
+                CUT_DEPARTMENTS.add(dept_k)
+                sub_iface = f"GigabitEthernet0/0.{dept_v['vlan']}"
+                try:
+                    pt.run_cli("Campus-Core-Router", f"configure terminal\ninterface {sub_iface}\nshutdown\nend\n")
+                except Exception:
+                    pass
+                break
+        if edge_id == "link-Campus-Core-Router-ISP-Edge-Router":
+            try:
+                pt.run_cli("Campus-Core-Router", "configure terminal\ninterface GigabitEthernet0/1\nshutdown\nend\n")
+            except Exception:
+                pass
+        log_event("OUTAGE", f"Physical carrier severed on cable: {edge_id}")
     else:
-        cmd = f"configure terminal\ninterface {sub_iface}\nno shutdown\nend\n"
-        pt.run_cli("Campus-Core-Router", cmd)
-        CUT_DEPARTMENTS.discard(dept_id)
-        log_event(
-            "RESTORED",
-            f"Link restored for {dept['name']}. Subnet {dept['subnet']} reconnected.",
-        )
+        CUT_EDGES.discard(edge_id)
+        for dept_k, dept_v in DEPARTMENTS.items():
+            if edge_id == f"link-{dept_v['router']}-Campus-Core-Router":
+                CUT_DEPARTMENTS.discard(dept_k)
+                sub_iface = f"GigabitEthernet0/0.{dept_v['vlan']}"
+                try:
+                    pt.run_cli("Campus-Core-Router", f"configure terminal\ninterface {sub_iface}\nno shutdown\nend\n")
+                except Exception:
+                    pass
+                break
+        if edge_id == "link-Campus-Core-Router-ISP-Edge-Router":
+            try:
+                pt.run_cli("Campus-Core-Router", "configure terminal\ninterface GigabitEthernet0/1\nno shutdown\nend\n")
+            except Exception:
+                pass
+        log_event("RESTORED", f"Physical carrier restored on cable: {edge_id}")
 
     try:
         pt.call_tool("fast_forward")
     except Exception:
         pass
 
-    raw_routes = pt.run_cli("Campus-Core-Router", "show ip route\n")
-    routes = parse_routing_table(raw_routes)
-
-    event_text = (
-        f"Route Dropped: {dept['subnet']}"
-        if action == "cut"
-        else f"Route Restored: {dept['subnet']}"
-    )
-    detail_text = (
-        f"{dept['name']} interface {sub_iface} shut down (Cable Cut)."
-        if action == "cut"
-        else f"{dept['name']} interface {sub_iface} restored (Cable Repaired)."
-    )
-
-    ROUTING_HISTORY.insert(
-        0,
-        {
-            "id": len(ROUTING_HISTORY) + 1,
-            "timestamp": datetime.datetime.now().strftime("%H:%M:%S"),
-            "event": event_text,
-            "detail": detail_text,
-            "route_count": len(routes),
-        },
-    )
-
-    tables = compute_router_tables(CUT_DEPARTMENTS)
+    tables = compute_router_tables(CUT_EDGES)
 
     return jsonify(
         {
             "success": True,
+            "edgeId": edge_id,
             "departmentId": dept_id,
             "action": action,
-            "isCut": dept_id in CUT_DEPARTMENTS,
-            "routes": routes,
-            "tables": tables,
-            "history": ROUTING_HISTORY,
+            "isCut": edge_id in CUT_EDGES,
+            "cutEdges": list(CUT_EDGES),
             "cutDepartments": list(CUT_DEPARTMENTS),
+            "tables": tables,
         }
     )
 
@@ -874,27 +919,21 @@ def toggle_link():
 @app.route("/api/router/routes", methods=["GET"])
 def get_router_routes():
     try:
-        tables = compute_router_tables(CUT_DEPARTMENTS)
-        raw_routes = pt.run_cli("Campus-Core-Router", "show ip route\n")
-        routes = parse_routing_table(raw_routes)
+        tables = compute_router_tables(CUT_EDGES)
         return jsonify(
             {
-                "routes": routes,
                 "tables": tables,
-                "raw": raw_routes,
-                "history": ROUTING_HISTORY,
+                "cutEdges": list(CUT_EDGES),
                 "cutDepartments": list(CUT_DEPARTMENTS),
             }
         )
     except Exception as e:
         logger.error(f"Routing table error: {e}")
-        tables = compute_router_tables(CUT_DEPARTMENTS)
+        tables = compute_router_tables(CUT_EDGES)
         return jsonify(
             {
-                "routes": [],
                 "tables": tables,
-                "raw": "",
-                "history": ROUTING_HISTORY,
+                "cutEdges": list(CUT_EDGES),
                 "cutDepartments": list(CUT_DEPARTMENTS),
                 "error": str(e),
             }
@@ -983,6 +1022,66 @@ def simulate_ping():
 
     if not source or not target:
         return jsonify({"error": "source and target are required"}), 400
+
+    if any(source in cut_id for cut_id in CUT_EDGES):
+        err_msg = (
+            f"\nPinging {target} with 32 bytes of data:\n\n"
+            f"Hardware Error: Physical Link Down (Cable Severed).\n"
+            f"Destination host unreachable.\n"
+            f"Destination host unreachable.\n"
+            f"Destination host unreachable.\n\n"
+            f"Ping statistics for {target}:\n"
+            f"    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss)\n"
+        )
+        log_event("PING", f"Ping test from '{source}' to '{target}' - Result: FAILED (Cable Severed)")
+        return jsonify({"source": source, "target": target, "success": False, "output": err_msg})
+
+    if target in ("8.8.8.8", "203.0.113.2") and "link-Campus-Core-Router-ISP-Edge-Router" in CUT_EDGES:
+        err_msg = (
+            f"\nPinging {target} with 32 bytes of data:\n\n"
+            f"Request timed out.\n"
+            f"Request timed out.\n"
+            f"Request timed out.\n"
+            f"Request timed out.\n\n"
+            f"Ping statistics for {target}:\n"
+            f"    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss)\n"
+            f"Campus Core Gateway reports: External WAN carrier link severed.\n"
+        )
+        log_event("PING", f"Ping test from '{source}' to '{target}' - Result: FAILED (WAN Down)")
+        return jsonify({"source": source, "target": target, "success": False, "output": err_msg})
+
+    if target in ("192.168.100.10", "Campus-DNS-Server") and "link-SW-SERVERS-Campus-DNS-Server" in CUT_EDGES:
+        err_msg = (
+            f"\nPinging {target} with 32 bytes of data:\n\n"
+            f"Destination host unreachable.\n"
+            f"Destination host unreachable.\n"
+            f"Destination host unreachable.\n"
+            f"Destination host unreachable.\n\n"
+            f"Ping statistics for {target}:\n"
+            f"    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss)\n"
+            f"Data Center Access Switch reports: Server link down.\n"
+        )
+        log_event("PING", f"Ping test from '{source}' to '{target}' - Result: FAILED (Server Link Down)")
+        return jsonify({"source": source, "target": target, "success": False, "output": err_msg})
+
+    dept_id = None
+    for d_k, d_v in DEPARTMENTS.items():
+        if d_v["code"] in source:
+            dept_id = d_k
+            break
+    if dept_id and f"link-{DEPARTMENTS[dept_id]['router']}-{DEPARTMENTS[dept_id]['switch']}" in CUT_EDGES:
+        err_msg = (
+            f"\nPinging {target} with 32 bytes of data:\n\n"
+            f"Destination host unreachable.\n"
+            f"Destination host unreachable.\n"
+            f"Destination host unreachable.\n"
+            f"Destination host unreachable.\n\n"
+            f"Ping statistics for {target}:\n"
+            f"    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss)\n"
+            f"Department Switch reports: Default Gateway trunk interface down.\n"
+        )
+        log_event("PING", f"Ping test from '{source}' to '{target}' - Result: FAILED (Gateway Trunk Down)")
+        return jsonify({"source": source, "target": target, "success": False, "output": err_msg})
 
     try:
         result = pt.run_ping(source, target)

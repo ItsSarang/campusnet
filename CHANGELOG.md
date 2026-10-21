@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Universal Edge Cable Cut System & Cable Inspector:**
+  - Interactive cable click detection on any connection across the campus network (Core Transit, Lateral Mesh, WAN Gateway, Switch Trunk, Access Patch Cord, and Server Uplink).
+  - Dedicated Cable Inspector drawer displaying physical endpoints, port names, carrier state, topological impact analysis, and direct Cut/Repair toggle.
+  - Interactive on-canvas `[SEVERED]` badge on cut cables with red dashed animation and carrier drop status.
+  - Realistic Layer 1, Layer 2, and Layer 3 ping error diagnostics for severed cables (Physical link down, Gateway trunk down, WAN carrier severed, Server link down).
 - **Multi-Router Campus Interconnect & Distance-Vector Routing Tables:**
   - Added dedicated Department Gateway Routers to each academic block (`Router-CS`, `Router-LIB`, `Router-ADMIN`, `Router-DC`) connecting downstream to department switches and upstream to `Campus-Core-Router`.
   - Added lateral campus mesh links (`Router-CS <-> Router-LIB` and `Router-ADMIN <-> Router-DC`) for path redundancy and rerouting.

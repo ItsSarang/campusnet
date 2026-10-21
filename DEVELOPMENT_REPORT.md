@@ -13,7 +13,13 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 
 ## Implemented Features
 
-### 1. Multi-Router Campus Interconnect & 3-Column Distance-Vector Routing Tables:
+### 1. Universal Edge Cable Cut System & Cable Inspector:
+- Universal edge-level interactivity allowing user to click any cable on the graph across all 6 network connection categories (Core Transit, Lateral Mesh, WAN Gateway, Gateway Trunk, Workstation Patch Cord, and Server Uplink).
+- Dedicated side-panel Cable Inspector displaying connected device endpoints, physical port names, carrier state (Connected vs. Severed), topological impact explanation, and direct Cut Cable / Repair Cable action button.
+- On-canvas visual feedback rendering severed cables with red dashed animations and interactive centered `[SEVERED]` badges.
+- Realistic Layer 1, Layer 2, and Layer 3 ping diagnostics simulating physical link down, gateway trunk disconnection, WAN drop, and server link failures.
+
+### 2. Multi-Router Campus Interconnect & 3-Column Distance-Vector Routing Tables:
 - Configured dedicated Department Gateway Routers inside each academic block (`Router-CS`, `Router-LIB`, `Router-ADMIN`, `Router-DC`) connecting downstream to department access switches and upstream to `Campus-Core-Router`.
 - Added lateral mesh links between adjacent blocks (`Router-CS <-> Router-LIB` and `Router-ADMIN <-> Router-DC`) for campus-level path redundancy.
 - Implemented dynamic shortest path routing computation that generates current distance-vector tables with exactly 3 columns: `Destination Router`, `Distance`, `Next Hop`.

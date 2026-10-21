@@ -70,11 +70,12 @@ export const api = {
     return res.json();
   },
 
-  async toggleLink(departmentId, action) {
+  async toggleLink(param, action) {
+    const payload = typeof param === 'string' ? { departmentId: param, action } : param;
     const res = await fetch(`${API_BASE}/topology/link/toggle`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ departmentId, action }),
+      body: JSON.stringify(payload),
     });
     return res.json();
   },
