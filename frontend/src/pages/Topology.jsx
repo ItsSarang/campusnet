@@ -581,6 +581,7 @@ export const Topology = () => {
 
   const onNodeClick = (_, node) => {
     if (node.type !== 'buildingNode') {
+      setRoutesDrawerOpen(false);
       setSelectedEdge(null);
       setSelectedNode(node);
       setPingResult(null);
@@ -588,12 +589,14 @@ export const Topology = () => {
   };
 
   const onEdgeClick = (_, edge) => {
+    setRoutesDrawerOpen(false);
     setSelectedNode(null);
     setSelectedEdge(edge);
     setPingResult(null);
   };
 
   const onPaneClick = () => {
+    setRoutesDrawerOpen(false);
     setSelectedNode(null);
     setSelectedEdge(null);
   };
@@ -734,7 +737,7 @@ export const Topology = () => {
         </div>
       )}
 
-      <div className="flex-1 relative bg-[#f7f4ed] rounded-xl border border-[#dfd8c8] overflow-hidden shadow-xs flex">
+      <div className="flex-1 relative bg-[#fdfcf9] rounded-2xl border-2 border-[#cfc6b6] shadow-[0_12px_40px_-8px_rgba(40,32,24,0.18),0_2px_8px_rgba(40,32,24,0.06)] overflow-hidden flex">
         <div className="flex-1 relative">
           <ReactFlow
             nodes={nodes}
@@ -746,7 +749,7 @@ export const Topology = () => {
             onPaneClick={onPaneClick}
             nodeTypes={nodeTypes}
             fitView
-            className="bg-[#f7f4ed]"
+            className="bg-[#fcfbfa]"
           >
             <Background color="#827666" gap={24} size={1.2} />
             <Controls
@@ -765,292 +768,8 @@ export const Topology = () => {
           </ReactFlow>
         </div>
 
-        {selectedNode && (
-          <aside className="w-84 min-w-84 bg-[#f4f0e8] border-l border-[#dfd8c8] p-5 flex flex-col justify-between overflow-y-auto z-10 shadow-lg">
-            <div>
-              <div className="flex items-center justify-between pb-3 border-b border-[#dfd8c8]">
-                <div>
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#7a7266] font-semibold">
-                    DEVICE INSPECTOR
-                  </span>
-                  <h3 className="text-xl font-bold text-[#1e1c19] tracking-tight mt-0.5">
-                    {selectedNode.data?.label}
-                  </h3>
-                </div>
-                <button
-                  onClick={() => setSelectedNode(null)}
-                  className="text-[#706b63] hover:text-[#1e1c19] p-1 rounded hover:bg-[#eae4d8]"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="mt-4 space-y-4 text-xs font-mono">
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold mb-1">
-                    HARDWARE SPECIFICATION
-                  </div>
-                  <div className="bg-white p-2.5 rounded-lg border border-[#dfd8c8] space-y-1">
-                    <div className="flex justify-between">
-                      <span className="text-[#706b63]">Device Role</span>
-                      <span className="text-[#1e1c19] font-bold capitalize">
-                        {selectedNode.data?.kind}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#706b63]">Cisco Model</span>
-                      <span className="text-[#1e1c19] font-semibold">
-                        {selectedNode.data?.model}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#706b63]">Academic Zone</span>
-                      <span className="text-[#1e1c19]">
-                        {selectedNode.data?.block || 'Campus Core'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold mb-1">
-                    IPV4 CONFIGURATION
-                  </div>
-                  <div className="bg-white p-2.5 rounded-lg border border-[#dfd8c8] space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#706b63]">IP Address</span>
-                      <span className="text-indigo-800 font-bold">
-                        {selectedNode.data?.ip}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#706b63]">Subnet Mask</span>
-                      <span className="text-[#1e1c19]">
-                        {selectedNode.data?.subnet}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#706b63]">Default Gateway</span>
-                      <span className="text-[#1e1c19]">
-                        {selectedNode.data?.gateway}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#706b63]">VLAN ID</span>
-                      <span className="px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 text-[10px]">
-                        VLAN {selectedNode.data?.vlan}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#706b63]">Allocation</span>
-                      <span className="text-[#1e1c19]">
-                        {selectedNode.data?.ipMode}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {selectedNode.data?.kind === 'host' && (
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold mb-1">
-                      DIAGNOSTIC CONNECTIVITY TESTS
-                    </div>
-                    <div className="bg-white p-2.5 rounded-lg border border-[#dfd8c8] space-y-2">
-                      <button
-                        onClick={() => handleQuickPing(selectedNode.data?.label, '192.168.100.10')}
-                        disabled={pingRunning}
-                        className="w-full py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded text-xs font-semibold flex items-center justify-center space-x-1.5 transition"
-                      >
-                        <Play className={`w-3.5 h-3.5 ${pingRunning ? 'animate-spin' : ''}`} />
-                        <span>Ping Campus Server (.100.10)</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleQuickPing(selectedNode.data?.label, '8.8.8.8')}
-                        disabled={pingRunning}
-                        className="w-full py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold flex items-center justify-center space-x-1.5 transition"
-                      >
-                        <Globe className={`w-3.5 h-3.5 ${pingRunning ? 'animate-spin' : ''}`} />
-                        <span>Ping Outside Internet (8.8.8.8)</span>
-                      </button>
-
-                      {pingResult && (
-                        <div
-                          className={`p-2 rounded text-[11px] font-mono border ${
-                            pingResult.success
-                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                              : 'bg-rose-50 text-rose-800 border-rose-300'
-                          }`}
-                        >
-                          <span className="font-bold">
-                            {pingResult.success ? 'ICMP Success (0% Loss)' : 'Ping Failed (Dropped)'}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {selectedNode.data?.kind === 'router' && (
-                  <div className="pt-2">
-                    <button
-                      onClick={() => {
-                        setRoutesDrawerOpen(true);
-                        loadRoutes();
-                      }}
-                      className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold flex items-center justify-center space-x-1.5 transition shadow-xs"
-                    >
-                      <Table className="w-3.5 h-3.5" />
-                      <span>View Campus Routing Tables</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-[#dfd8c8] flex items-center justify-between">
-              {selectedNode.data?.kind === 'host' ? (
-                <button
-                  onClick={() => handleDeleteDevice(selectedNode.data?.label)}
-                  disabled={deletingDevice}
-                  className="flex items-center space-x-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded text-xs font-semibold border border-rose-200 transition"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>{deletingDevice ? 'Deleting...' : 'Delete PC'}</span>
-                </button>
-              ) : (
-                <span className="text-[11px] text-[#706b63] font-mono">Infrastructure Node</span>
-              )}
-
-              <button
-                onClick={() => setSelectedNode(null)}
-                className="px-3 py-1.5 bg-white hover:bg-[#eae4d8] border border-[#dfd8c8] text-[#1e1c19] rounded text-xs font-medium transition"
-              >
-                Close
-              </button>
-            </div>
-          </aside>
-        )}
-
-        {selectedEdge && !selectedNode && (
-          <aside className="w-84 min-w-84 bg-[#f4f0e8] border-l border-[#dfd8c8] p-5 flex flex-col justify-between overflow-y-auto z-10 shadow-lg">
-            <div>
-              <div className="flex items-center justify-between pb-3 border-b border-[#dfd8c8]">
-                <div>
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#7a7266] font-semibold">
-                    CABLE INSPECTOR
-                  </span>
-                  <h3 className="text-sm font-bold text-[#1e1c19] tracking-tight mt-0.5 truncate">
-                    {selectedEdge.categoryLabel || selectedEdge.id}
-                  </h3>
-                </div>
-                <button
-                  onClick={() => setSelectedEdge(null)}
-                  className="text-[#706b63] hover:text-[#1e1c19] p-1 rounded hover:bg-[#eae4d8]"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="mt-4 space-y-4 text-xs font-mono">
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold mb-1">
-                    LINK ENDPOINTS
-                  </div>
-                  <div className="bg-white p-3 rounded-lg border border-[#dfd8c8] space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#706b63]">Endpoint A</span>
-                      <span className="text-[#1e1c19] font-bold">{selectedEdge.source}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-[11px] text-[#706b63]">
-                      <span>Port</span>
-                      <span className="text-indigo-800 font-semibold">{selectedEdge.portA || 'Auto'}</span>
-                    </div>
-                    <div className="border-t border-[#dfd8c8] my-1" />
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#706b63]">Endpoint B</span>
-                      <span className="text-[#1e1c19] font-bold">{selectedEdge.target}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-[11px] text-[#706b63]">
-                      <span>Port</span>
-                      <span className="text-indigo-800 font-semibold">{selectedEdge.portB || 'Auto'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold mb-1">
-                    PHYSICAL CARRIER STATE
-                  </div>
-                  <div className="bg-white p-3 rounded-lg border border-[#dfd8c8] space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#706b63]">Status</span>
-                      <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          selectedEdge.isCut
-                            ? 'bg-rose-100 text-rose-800 border border-rose-300'
-                            : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                        }`}
-                      >
-                        {selectedEdge.isCut ? 'SEVERED (NO CARRIER)' : 'ACTIVE (CONNECTED)'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#706b63]">Category</span>
-                      <span className="text-[#1e1c19] capitalize font-sans text-[11px]">
-                        {selectedEdge.category ? selectedEdge.category.replace('_', ' ') : 'Network Link'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {selectedEdge.impact && (
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold mb-1">
-                      TOPOLOGICAL IMPACT
-                    </div>
-                    <div className="bg-[#eae4d8] p-3 rounded-lg border border-[#dfd8c8] text-[11px] text-[#554f45] font-sans leading-relaxed">
-                      {selectedEdge.impact}
-                    </div>
-                  </div>
-                )}
-
-                <div className="pt-2">
-                  {selectedEdge.isCut ? (
-                    <button
-                      onClick={() => handleToggleEdge(selectedEdge.id)}
-                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-2 transition shadow-xs"
-                    >
-                      <Wrench className="w-4 h-4" />
-                      <span>Repair Cable (Restore Carrier)</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleToggleEdge(selectedEdge.id)}
-                      className="w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 rounded-lg text-xs font-bold flex items-center justify-center space-x-2 transition"
-                    >
-                      <Scissors className="w-4 h-4" />
-                      <span>Cut Cable (Sever Link)</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-[#dfd8c8] flex items-center justify-between">
-              <span className="text-[11px] text-[#706b63] font-mono">Carrier Ethernet</span>
-              <button
-                onClick={() => setSelectedEdge(null)}
-                className="px-3 py-1.5 bg-white hover:bg-[#eae4d8] border border-[#dfd8c8] text-[#1e1c19] rounded text-xs font-medium transition"
-              >
-                Close
-              </button>
-            </div>
-          </aside>
-        )}
-
-        {routesDrawerOpen && (
-          <div className="absolute right-4 top-4 bottom-4 w-[520px] bg-[#f4f0e8] border border-[#dfd8c8] rounded-xl p-5 shadow-2xl z-20 flex flex-col justify-between">
+        {routesDrawerOpen ? (
+          <aside className="w-[480px] min-w-[480px] max-w-[480px] shrink-0 bg-[#f4f0e8] border-l border-[#dfd8c8] p-5 flex flex-col justify-between overflow-hidden z-10 shadow-lg">
             <div className="flex-1 flex flex-col overflow-hidden">
               <div className="flex items-center justify-between pb-3 border-b border-[#dfd8c8]">
                 <div className="flex items-center space-x-2">
@@ -1076,22 +795,19 @@ export const Topology = () => {
                   </button>
                   <button
                     onClick={() => setRoutesDrawerOpen(false)}
-                    className="text-[#706b63] hover:text-[#1e1c19] p-1"
+                    className="text-[#706b63] hover:text-[#1e1c19] p-1 rounded hover:bg-[#eae4d8] transition"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto mt-4 space-y-4 pr-1 font-mono">
+              <div className="flex-1 overflow-y-auto mt-4 space-y-5 pr-1 font-mono">
                 {(routesData.tables || []).map((tbl) => (
-                  <div
-                    key={tbl.router}
-                    className="bg-white border border-[#dfd8c8] rounded-xl p-3.5 shadow-2xs space-y-2.5"
-                  >
-                    <div className="flex items-center justify-between border-b border-[#dfd8c8] pb-2">
+                  <div key={tbl.router} className="space-y-2">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
+                        <span className="w-2 h-2 rounded-full bg-indigo-600" />
                         <h4 className="font-bold text-sm text-[#1e1c19] tracking-tight">
                           {tbl.router}
                         </h4>
@@ -1101,7 +817,7 @@ export const Topology = () => {
                       </span>
                     </div>
 
-                    <div className="border border-[#dfd8c8] rounded-lg overflow-hidden">
+                    <div className="border border-[#dfd8c8] rounded-lg overflow-hidden bg-white shadow-2xs">
                       <table className="w-full text-left text-xs text-[#1e1c19]">
                         <thead className="bg-[#eae4d8] text-[#554f45] text-[10px] uppercase font-semibold border-b border-[#dfd8c8]">
                           <tr>
@@ -1116,20 +832,8 @@ export const Topology = () => {
                               <td className="px-3 py-2 font-semibold text-[#1e1c19]">
                                 {r.destination}
                               </td>
-                              <td className="px-3 py-2 text-center">
-                                <span
-                                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                    r.distance === 0
-                                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                      : r.distance === 1
-                                      ? 'bg-indigo-100 text-indigo-800 border border-indigo-300'
-                                      : r.distance === 'Unreachable'
-                                      ? 'bg-rose-100 text-rose-800 border border-rose-300'
-                                      : 'bg-amber-100 text-amber-800 border border-amber-300'
-                                  }`}
-                                >
-                                  {r.distance}
-                                </span>
+                              <td className="px-3 py-2 text-center font-bold text-[#1e1c19]">
+                                {r.distance}
                               </td>
                               <td className="px-3 py-2 text-[11px] text-[#554f45]">
                                 {r.nextHop}
@@ -1146,15 +850,276 @@ export const Topology = () => {
 
             <div className="pt-3 border-t border-[#dfd8c8] text-[11px] text-[#706b63] flex justify-between items-center font-mono">
               <span>Bellman-Ford DVR Engine Active</span>
-              <button
-                onClick={() => setRoutesDrawerOpen(false)}
-                className="px-3 py-1 bg-white hover:bg-[#eae4d8] border border-[#dfd8c8] text-[#1e1c19] rounded text-xs transition"
-              >
-                Close
-              </button>
             </div>
-          </div>
-        )}
+          </aside>
+        ) : selectedNode ? (
+          <aside className="w-96 min-w-96 max-w-96 shrink-0 bg-[#f4f0e8] border-l border-[#dfd8c8] p-5 flex flex-col justify-between overflow-y-auto z-10 shadow-lg">
+            <div className="space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-[#dfd8c8]">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#7a7266] font-semibold">
+                    DEVICE INSPECTOR
+                  </span>
+                  <h3 className="text-xl font-bold text-[#1e1c19] tracking-tight mt-0.5">
+                    {selectedNode.data?.label}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setSelectedNode(null)}
+                  className="text-[#706b63] hover:text-[#1e1c19] p-1 rounded hover:bg-[#eae4d8] transition"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-5 text-xs font-mono">
+                <div className="space-y-2">
+                  <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold">
+                    HARDWARE SPECIFICATION
+                  </div>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#706b63]">Device Role</span>
+                      <span className="text-[#1e1c19] font-bold capitalize">
+                        {selectedNode.data?.kind}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#706b63]">Cisco Model</span>
+                      <span className="text-[#1e1c19] font-semibold">
+                        {selectedNode.data?.model}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-[#dfd8c8]" />
+
+                <div className="space-y-2">
+                  <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold">
+                    IPV4 CONFIGURATION
+                  </div>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#706b63]">IP Address</span>
+                      <span className="text-indigo-800 font-bold">
+                        {selectedNode.data?.ip}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#706b63]">Subnet Mask</span>
+                      <span className="text-[#1e1c19]">
+                        {selectedNode.data?.subnet}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#706b63]">Default Gateway</span>
+                      <span className="text-[#1e1c19]">
+                        {selectedNode.data?.gateway}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#706b63]">VLAN ID</span>
+                      <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 text-[10px]">
+                        VLAN {selectedNode.data?.vlan}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#706b63]">Allocation</span>
+                      <span className="text-[#1e1c19]">
+                        {selectedNode.data?.ipMode}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedNode.data?.kind === 'host' && (
+                  <>
+                    <div className="border-t border-[#dfd8c8]" />
+                    <div className="space-y-3">
+                      <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold">
+                        DIAGNOSTIC CONNECTIVITY TESTS
+                      </div>
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => handleQuickPing(selectedNode.data?.label, '192.168.100.10')}
+                          disabled={pingRunning}
+                          className="w-full py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 transition shadow-2xs"
+                        >
+                          <Play className={`w-3.5 h-3.5 ${pingRunning ? 'animate-spin' : ''}`} />
+                          <span>Ping Campus Server (.100.10)</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleQuickPing(selectedNode.data?.label, '8.8.8.8')}
+                          disabled={pingRunning}
+                          className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 transition shadow-2xs"
+                        >
+                          <Globe className={`w-3.5 h-3.5 ${pingRunning ? 'animate-spin' : ''}`} />
+                          <span>Ping Outside Internet (8.8.8.8)</span>
+                        </button>
+
+                        {pingResult && (
+                          <div
+                            className={`p-2 rounded text-[11px] font-mono border ${
+                              pingResult.success
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                : 'bg-rose-50 text-rose-800 border-rose-300'
+                            }`}
+                          >
+                            <span className="font-bold">
+                              {pingResult.success ? 'ICMP Success (0% Loss)' : 'Ping Failed (Dropped)'}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {selectedNode.data?.kind === 'router' && (
+                  <>
+                    <div className="border-t border-[#dfd8c8]" />
+                    <div>
+                      <button
+                        onClick={() => {
+                          setRoutesDrawerOpen(true);
+                          loadRoutes();
+                        }}
+                        className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 transition shadow-2xs"
+                      >
+                        <Table className="w-3.5 h-3.5" />
+                        <span>View Campus Routing Tables</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {selectedNode.data?.kind === 'host' && (
+              <div className="pt-4 border-t border-[#dfd8c8]">
+                <button
+                  onClick={() => handleDeleteDevice(selectedNode.data?.label)}
+                  disabled={deletingDevice}
+                  className="w-full flex items-center justify-center space-x-1.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-semibold border border-rose-200 transition"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>{deletingDevice ? 'Deleting...' : 'Delete Workstation'}</span>
+                </button>
+              </div>
+            )}
+          </aside>
+        ) : selectedEdge ? (
+          <aside className="w-96 min-w-96 max-w-96 shrink-0 bg-[#f4f0e8] border-l border-[#dfd8c8] p-5 flex flex-col justify-between overflow-y-auto z-10 shadow-lg">
+            <div className="space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-[#dfd8c8]">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#7a7266] font-semibold">
+                    CABLE INSPECTOR
+                  </span>
+                  <h3 className="text-sm font-bold text-[#1e1c19] tracking-tight mt-0.5 truncate">
+                    {selectedEdge.categoryLabel || selectedEdge.id}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setSelectedEdge(null)}
+                  className="text-[#706b63] hover:text-[#1e1c19] p-1 rounded hover:bg-[#eae4d8] transition"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-5 text-xs font-mono">
+                <div className="space-y-2">
+                  <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold">
+                    LINK ENDPOINTS
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#706b63]">Endpoint A</span>
+                      <span className="text-[#1e1c19] font-bold">{selectedEdge.source}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-[#706b63]">
+                      <span>Port</span>
+                      <span className="text-indigo-800 font-semibold">{selectedEdge.portA || 'Auto'}</span>
+                    </div>
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-[#706b63]">Endpoint B</span>
+                      <span className="text-[#1e1c19] font-bold">{selectedEdge.target}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-[#706b63]">
+                      <span>Port</span>
+                      <span className="text-indigo-800 font-semibold">{selectedEdge.portB || 'Auto'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-[#dfd8c8]" />
+
+                <div className="space-y-2">
+                  <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold">
+                    PHYSICAL CARRIER STATE
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#706b63]">Status</span>
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          selectedEdge.isCut
+                            ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                            : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        }`}
+                      >
+                        {selectedEdge.isCut ? 'SEVERED (NO CARRIER)' : 'ACTIVE (CONNECTED)'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#706b63]">Category</span>
+                      <span className="text-[#1e1c19] capitalize font-sans text-[11px]">
+                        {selectedEdge.category ? selectedEdge.category.replace('_', ' ') : 'Network Link'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedEdge.impact && (
+                  <>
+                    <div className="border-t border-[#dfd8c8]" />
+                    <div className="space-y-2">
+                      <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold">
+                        TOPOLOGICAL IMPACT
+                      </div>
+                      <div className="text-[11px] text-[#554f45] font-sans leading-relaxed">
+                        {selectedEdge.impact}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <div className="pt-2">
+                  {selectedEdge.isCut ? (
+                    <button
+                      onClick={() => handleToggleEdge(selectedEdge.id)}
+                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-2 transition shadow-xs"
+                    >
+                      <Wrench className="w-4 h-4" />
+                      <span>Repair Cable (Restore Carrier)</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleToggleEdge(selectedEdge.id)}
+                      className="w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 rounded-lg text-xs font-bold flex items-center justify-center space-x-2 transition"
+                    >
+                      <Scissors className="w-4 h-4" />
+                      <span>Cut Cable (Sever Link)</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </aside>
+        ) : null}
 
         {addModalOpen && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">

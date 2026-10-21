@@ -13,7 +13,14 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 
 ## Implemented Features
 
-### 1. Controlled Communication & Visual Firewall Matrix:
+### 1. Topology Explorer Visual Depth & Inspector Modernization:
+- Enhanced canvas container with double borders (`border-2 border-[#cfc6b6]`) and an elevated drop shadow (`shadow-[0_12px_40px_-8px_rgba(40,32,24,0.18)]`) establishing clear separation from the page canvas background.
+- Standardized Device Inspector and Cable Inspector to a fixed 384px width (`w-96 min-w-96 max-w-96 shrink-0`), preventing layout shifts across node types.
+- Eliminated nested inner cards within inspector side panels in favor of clean section dividers (`border-t border-[#dfd8c8]`) and generous vertical spacing (`space-y-5`).
+- Removed redundant bottom close buttons, Academic Zone labels, and generic infrastructure tags from side panels.
+- Upgraded Campus Routing Tables drawer from a floating overlay card into a docked full-height side panel with seamless router-table headers and clean typographic distance columns.
+
+### 2. Controlled Communication & Visual Firewall Matrix:
 - Implemented the Campus Department Communication Matrix (Visual Firewall) in `frontend/src/pages/SecurityCenter.jsx`.
 - 3x4 grid covering CS Dept (VLAN 10), Library (VLAN 20), Admin Dept (VLAN 30), and Data Center Servers (VLAN 100).
 - Interactive ALLOW (emerald) and DENY (rose) policy toggles with LOCAL L2 intra-switch indicators.
