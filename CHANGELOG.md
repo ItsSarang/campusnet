@@ -18,9 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Deployed dedicated `Admin-Portal-Server` (`Server-PT`) at `192.168.30.20` in Academic Block C (VLAN 30) serving confidential university administrative records.
   - Configured native DNS service on `Campus-DNS-Server` with `A` records for `student.mitwpu.edu`, `admin.mitwpu.edu`, and `library.mitwpu.edu`.
   - Configured HTTP servers with rich HTML portals for student course registration and executive administration.
-- **Simulated Campus Web Browser:**
-  - Embedded browser client component in SecurityCenter allowing selection of client host, address entry, and quick bookmark navigation.
-  - Validates live Layer 7 HTTP 200 OK delivery vs Layer 3/4 firewall packet drops (`Destination Host Administratively Prohibited`).
+- **Simulated Campus Web Browser Window:**
+  - Styled the web test view to authentic desktop browser aesthetics with window control buttons, tab header, client workstation picker, address bar with lock icon, and bottom status bar.
+  - Deployed clean academic intranet web pages for student.mitwpu.edu and admin.mitwpu.edu presenting Computer Networks Laboratory simulation context without clutter or dummy pills.
+  - Implemented authentic browser network error view rendering diagnostic details when traffic is dropped by Core Router ACLs.
+- **Streamlined Security Center View:**
+  - Removed redundant 1-click presets card to reduce visual noise and prioritize the Visual Firewall Matrix and live verification browser.
 - **Cisco IOS Script Preview Modal:**
   - Added dedicated syntax modal showing the exact compiled Cisco IOS Extended ACL configuration before and after router enforcement.
 - **Global ASAG Offwhite Color Palette & Design System:**

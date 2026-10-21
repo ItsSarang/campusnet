@@ -25,11 +25,13 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 - Configured native DNS records on `Campus-DNS-Server`: `student.mitwpu.edu`, `admin.mitwpu.edu`, and `library.mitwpu.edu`.
 - Configured HTTP services serving actual university intranet HTML pages for student services and confidential administrative records.
 
-### 3. Immediate Verification Suite (Ping Console + Campus Web Browser):
-- 1-Click Verification Presets automatically executing target tests with expected verdict badges.
-- Embedded Simulated Campus Web Browser testing live DNS name resolution and HTTP 200 OK rendering vs 403 Forbidden connection timeouts.
-- ICMP Ping Terminal displaying real Packet Tracer CLI stdout responses.
+### 3. Immediate Verification Suite (Ping Console + Desktop Browser Simulator):
+- Re-styled the Campus Web Browser with realistic desktop window chrome (traffic light controls, tab bar, client workstation selector, lock icon, address input, and status bar).
+- Configured clean, professional academic portal HTML for `student.mitwpu.edu` and `admin.mitwpu.edu` presenting Computer Networks Laboratory context without clutter.
+- Implemented authentic browser network diagnostic error page when traffic is filtered by router ACLs.
+- Embedded ICMP Ping Terminal displaying real Packet Tracer CLI stdout responses.
 - Cisco IOS Script Modal displaying exact synthesized extended access-list commands.
+- Removed redundant 1-click verification card to streamline viewport layout.
 
 ### 4. Global ASAG Offwhite Design System:
 - Migrated the whole frontend palette to the warm offwhite aesthetic from the ASAG project.

@@ -11,9 +11,11 @@ import {
   Check,
   X,
   Lock,
-  ArrowRight,
-  ExternalLink,
   Laptop,
+  ArrowLeft,
+  ArrowRight,
+  AlertCircle,
+  ShieldAlert,
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -315,79 +317,6 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
         </div>
       </div>
 
-      <div className="bg-[#fdfcf9] rounded-2xl border border-[#dfd8c8] p-5 shadow-[0_2px_12px_-2px_rgba(50,40,30,0.05)] space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-mono uppercase tracking-wider font-semibold text-[#706b63]">
-            1-Click Immediate Verification Scenarios
-          </span>
-          <span className="text-[11px] font-mono text-[#8c8477]">
-            Quick automated tests against Packet Tracer engine
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-          <button
-            onClick={() => handleRunPing('CS-PC-01', '192.168.30.20')}
-            className="p-3 bg-[#faf8f4] hover:bg-[#f2eee5] border border-[#dfd8c8] rounded-xl text-left transition flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between text-xs font-mono font-bold text-[#1e1c19]">
-              <span>Ping: CS to Admin</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 font-semibold">
-                Expects: DENY
-              </span>
-            </div>
-            <p className="text-[11px] text-[#706b63] font-mono mt-1">
-              CS-PC-01 to 192.168.30.20 (Admin ERP)
-            </p>
-          </button>
-
-          <button
-            onClick={() => handleRunPing('CS-PC-01', '192.168.100.10')}
-            className="p-3 bg-[#faf8f4] hover:bg-[#f2eee5] border border-[#dfd8c8] rounded-xl text-left transition flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between text-xs font-mono font-bold text-[#1e1c19]">
-              <span>Ping: CS to DNS Server</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold">
-                Expects: ALLOW
-              </span>
-            </div>
-            <p className="text-[11px] text-[#706b63] font-mono mt-1">
-              CS-PC-01 to 192.168.100.10 (0% Loss)
-            </p>
-          </button>
-
-          <button
-            onClick={() => handleBrowseWeb('CS-PC-01', 'http://student.mitwpu.edu')}
-            className="p-3 bg-[#faf8f4] hover:bg-[#f2eee5] border border-[#dfd8c8] rounded-xl text-left transition flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between text-xs font-mono font-bold text-[#1e1c19]">
-              <span>Browse: student.mitwpu.edu</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold">
-                Expects: 200 OK
-              </span>
-            </div>
-            <p className="text-[11px] text-[#706b63] font-mono mt-1">
-              Data Center DMZ Student Portal
-            </p>
-          </button>
-
-          <button
-            onClick={() => handleBrowseWeb('CS-PC-01', 'http://admin.mitwpu.edu')}
-            className="p-3 bg-[#faf8f4] hover:bg-[#f2eee5] border border-[#dfd8c8] rounded-xl text-left transition flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between text-xs font-mono font-bold text-[#1e1c19]">
-              <span>Browse: admin.mitwpu.edu</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 font-semibold">
-                Expects: BLOCKED
-              </span>
-            </div>
-            <p className="text-[11px] text-[#706b63] font-mono mt-1">
-              VLAN 30 Restricted Intranet ERP
-            </p>
-          </button>
-        </div>
-      </div>
-
       <div className="bg-[#fdfcf9] rounded-2xl border border-[#dfd8c8] shadow-[0_2px_12px_-2px_rgba(50,40,30,0.05)] overflow-hidden">
         <div className="px-6 py-3.5 border-b border-[#dfd8c8] bg-[#faf8f4] flex items-center justify-between">
           <div className="inline-flex items-center bg-[#e6e0d2] p-0.5 rounded-xl border border-[#d8d0bf]">
@@ -400,7 +329,7 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
               }`}
             >
               <Globe className="w-3.5 h-3.5" />
-              <span>Campus Web Browser (HTTP Test)</span>
+              <span>Campus Web Browser (HTTP Output)</span>
             </button>
             <button
               onClick={() => setActiveTab('terminal')}
@@ -416,129 +345,183 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
           </div>
 
           <span className="text-xs font-mono text-[#706b63]">
-            {activeTab === 'browser' ? 'DNS & HTTP Service Emulation' : 'Layer 3 Echo Simulation'}
+            {activeTab === 'browser' ? 'Cisco Packet Tracer Web Client' : 'Layer 3 Echo Simulation'}
           </span>
         </div>
 
         {activeTab === 'browser' && (
-          <div className="p-6 space-y-4">
-            <div className="bg-[#f2eee5] p-3 rounded-xl border border-[#dfd8c8] flex flex-col md:flex-row md:items-center gap-3">
-              <div className="flex items-center space-x-2 shrink-0">
-                <Laptop className="w-4 h-4 text-[#706b63]" />
-                <span className="text-xs font-mono font-semibold text-[#554f45]">Client:</span>
-                <select
-                  value={browserDevice}
-                  onChange={(e) => setBrowserDevice(e.target.value)}
-                  className="bg-[#fdfcf9] border border-[#dfd8c8] rounded-lg px-2.5 py-1 text-xs text-[#1e1c19] font-mono focus:outline-none focus:border-[#1e1c19]"
-                >
-                  {hostDevices.map((d) => (
-                    <option key={d.name} value={d.name}>
-                      {d.name}
-                    </option>
-                  ))}
-                  <option value="Admin-Portal-Server">Admin-Portal-Server</option>
-                </select>
-              </div>
-
-              <div className="flex-1 flex items-center space-x-2">
-                <input
-                  type="text"
-                  value={browserUrl}
-                  onChange={(e) => setBrowserUrl(e.target.value)}
-                  placeholder="http://student.mitwpu.edu"
-                  className="flex-1 bg-[#fdfcf9] border border-[#dfd8c8] rounded-lg px-3 py-1 text-xs text-[#1e1c19] font-mono focus:outline-none focus:border-[#1e1c19]"
-                />
-                <button
-                  onClick={() => handleBrowseWeb(browserDevice, browserUrl)}
-                  disabled={browsing}
-                  className="px-4 py-1 bg-[#1e1c19] hover:bg-[#33302b] text-[#f7f4ed] rounded-lg text-xs font-semibold font-mono transition shadow-xs flex items-center space-x-1.5"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${browsing ? 'animate-spin' : ''}`} />
-                  <span>{browsing ? 'Navigating...' : 'Go'}</span>
-                </button>
-              </div>
-
-              <div className="flex items-center space-x-1.5 shrink-0 text-xs font-mono">
-                <button
-                  onClick={() => {
-                    setBrowserUrl('http://student.mitwpu.edu');
-                    handleBrowseWeb(browserDevice, 'http://student.mitwpu.edu');
-                  }}
-                  className="px-2 py-0.5 bg-[#eae4d8] hover:bg-[#dfd8c8] text-[#554f45] rounded-md border border-[#d8d0bf]"
-                >
-                  student.mitwpu.edu
-                </button>
-                <button
-                  onClick={() => {
-                    setBrowserUrl('http://admin.mitwpu.edu');
-                    handleBrowseWeb(browserDevice, 'http://admin.mitwpu.edu');
-                  }}
-                  className="px-2 py-0.5 bg-[#eae4d8] hover:bg-[#dfd8c8] text-[#554f45] rounded-md border border-[#d8d0bf]"
-                >
-                  admin.mitwpu.edu
-                </button>
-              </div>
-            </div>
-
-            {browserResult && (
-              <div
-                className={`p-3 rounded-xl border text-xs font-mono flex items-center justify-between ${
-                  browserResult.success
-                    ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
-                    : 'bg-rose-50 text-rose-900 border-rose-300'
-                }`}
-              >
+          <div className="p-6">
+            <div className="bg-[#ede8dc] rounded-2xl border border-[#d8d0bf] shadow-md overflow-hidden flex flex-col">
+              <div className="px-4 py-2.5 bg-[#e4dece] border-b border-[#d8d0bf] flex items-center justify-between select-none">
                 <div className="flex items-center space-x-2">
-                  {browserResult.success ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  ) : (
-                    <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                  )}
-                  <span>
-                    <strong>Status:</strong> {browserResult.status} |{' '}
-                    <strong>Destination Server:</strong> {browserResult.server}
-                  </span>
-                </div>
-                <span className="text-[11px] opacity-80">Client: {browserResult.device}</span>
-              </div>
-            )}
-
-            <div className="bg-[#faf8f4] border border-[#dfd8c8] rounded-xl overflow-hidden min-h-[260px] p-4 flex flex-col justify-center">
-              {browserResult ? (
-                browserResult.success ? (
-                  <div
-                    className="w-full bg-[#fdfcf9] rounded-lg p-6 border border-[#dfd8c8] shadow-xs"
-                    dangerouslySetInnerHTML={{ __html: browserResult.html }}
-                  />
-                ) : (
-                  <div className="max-w-md mx-auto text-center space-y-3 py-6">
-                    <div className="w-12 h-12 mx-auto rounded-full bg-rose-100 border border-rose-300 flex items-center justify-center text-rose-600">
-                      <Lock className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h4 className="text-base font-bold text-[#1e1c19]">
-                        This site cannot be reached
-                      </h4>
-                      <p className="text-xs text-[#706b63] font-mono mt-1">
-                        {browserResult.url} took too long to respond.
-                      </p>
-                    </div>
-                    <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 text-left font-mono text-[11px] text-rose-900 space-y-1">
-                      <p className="font-bold">Error: {browserResult.error}</p>
-                      <p className="text-rose-700">
-                        Firewall Action: Dropped at Campus-Core-Router GigabitEthernet0/0
-                      </p>
-                      <p className="text-rose-700">
-                        Extended ACL Rule: Deny 192.168.10.0/24 to 192.168.30.0/24
-                      </p>
-                    </div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e]" />
+                    <span className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123]" />
+                    <span className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29]" />
                   </div>
-                )
-              ) : (
-                <div className="text-center text-xs font-mono text-[#8c8477] py-12">
-                  Select a workstation and URL, then click &apos;Go&apos; to navigate via Cisco Packet Tracer DNS & HTTP engines.
+
+                  <div className="ml-4 flex items-center space-x-2 bg-white px-3.5 py-1 rounded-t-lg border-t border-x border-[#d8d0bf] text-xs font-mono font-medium text-[#1e1c19] shadow-2xs">
+                    <Globe className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                    <span className="truncate max-w-[200px]">
+                      {browserUrl.replace('http://', '') || 'New Tab'}
+                    </span>
+                  </div>
                 </div>
-              )}
+
+                <span className="text-[10px] font-mono text-[#706b63] hidden sm:inline">
+                  Cisco Web Browser Simulator v9.0
+                </span>
+              </div>
+
+              <div className="px-4 py-2 bg-[#faf8f4] border-b border-[#dfd8c8] flex flex-wrap items-center gap-2.5">
+                <div className="flex items-center space-x-1 text-[#8c8477]">
+                  <button
+                    disabled
+                    className="p-1 rounded hover:bg-[#eae4d8] disabled:opacity-40"
+                    title="Back"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    disabled
+                    className="p-1 rounded hover:bg-[#eae4d8] disabled:opacity-40"
+                    title="Forward"
+                  >
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleBrowseWeb(browserDevice, browserUrl)}
+                    disabled={browsing}
+                    className="p-1 rounded hover:bg-[#eae4d8] text-[#1e1c19]"
+                    title="Reload"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${browsing ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
+
+                <div className="flex items-center space-x-1.5 bg-[#eae4d8] px-2.5 py-1 rounded-lg border border-[#d8d0bf] text-xs font-mono shrink-0">
+                  <Laptop className="w-3.5 h-3.5 text-[#554f45]" />
+                  <span className="text-[#554f45] font-semibold">Client:</span>
+                  <select
+                    value={browserDevice}
+                    onChange={(e) => setBrowserDevice(e.target.value)}
+                    className="bg-transparent text-[#1e1c19] font-mono focus:outline-none cursor-pointer"
+                  >
+                    {hostDevices.map((d) => (
+                      <option key={d.name} value={d.name}>
+                        {d.name}
+                      </option>
+                    ))}
+                    <option value="Admin-Portal-Server">Admin-Portal-Server</option>
+                  </select>
+                </div>
+
+                <div className="flex-1 min-w-[240px] flex items-center bg-white px-3 py-1 rounded-lg border border-[#dfd8c8] shadow-2xs">
+                  <Lock className="w-3.5 h-3.5 text-[#8c8477] mr-2 shrink-0" />
+                  <input
+                    type="text"
+                    value={browserUrl}
+                    onChange={(e) => setBrowserUrl(e.target.value)}
+                    placeholder="http://student.mitwpu.edu"
+                    className="w-full text-xs font-mono text-[#1e1c19] focus:outline-none"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleBrowseWeb(browserDevice, browserUrl);
+                    }}
+                  />
+                  <button
+                    onClick={() => handleBrowseWeb(browserDevice, browserUrl)}
+                    disabled={browsing}
+                    className="ml-2 px-3 py-0.5 bg-[#1e1c19] hover:bg-[#33302b] text-[#f7f4ed] rounded text-xs font-mono font-semibold transition"
+                  >
+                    {browsing ? '...' : 'Go'}
+                  </button>
+                </div>
+
+                <div className="flex items-center space-x-1 shrink-0 text-xs font-mono">
+                  <button
+                    onClick={() => {
+                      setBrowserUrl('http://student.mitwpu.edu');
+                      handleBrowseWeb(browserDevice, 'http://student.mitwpu.edu');
+                    }}
+                    className="px-2 py-0.5 bg-[#eae4d8] hover:bg-[#dfd8c8] text-[#554f45] rounded-md border border-[#d8d0bf] transition"
+                  >
+                    student.mitwpu.edu
+                  </button>
+                  <button
+                    onClick={() => {
+                      setBrowserUrl('http://admin.mitwpu.edu');
+                      handleBrowseWeb(browserDevice, 'http://admin.mitwpu.edu');
+                    }}
+                    className="px-2 py-0.5 bg-[#eae4d8] hover:bg-[#dfd8c8] text-[#554f45] rounded-md border border-[#d8d0bf] transition"
+                  >
+                    admin.mitwpu.edu
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-white min-h-[360px] p-6 flex flex-col justify-between overflow-y-auto">
+                {browserResult ? (
+                  browserResult.success ? (
+                    <div
+                      className="w-full"
+                      dangerouslySetInnerHTML={{ __html: browserResult.html }}
+                    />
+                  ) : (
+                    <div className="max-w-lg mx-auto text-center space-y-4 py-8">
+                      <div className="w-14 h-14 mx-auto rounded-full bg-[#f4f0e8] border border-[#dfd8c8] flex items-center justify-center text-[#706b63]">
+                        <ShieldAlert className="w-7 h-7" />
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-bold text-[#1e1c19]">
+                          This site cannot be reached
+                        </h4>
+                        <p className="text-xs text-[#706b63] font-mono mt-1">
+                          <strong>{browserResult.url.replace('http://', '')}</strong> took too long to respond.
+                        </p>
+                      </div>
+
+                      <div className="text-left text-xs text-[#554f45] space-y-1.5 max-w-sm mx-auto">
+                        <p className="font-semibold text-[#1e1c19]">Try:</p>
+                        <p className="pl-3 border-l-2 border-[#dfd8c8]">
+                          Checking the connection between subnets
+                        </p>
+                        <p className="pl-3 border-l-2 border-[#dfd8c8]">
+                          Checking the router firewall and extended access control lists
+                        </p>
+                      </div>
+
+                      <div className="bg-[#faf8f4] border border-[#dfd8c8] rounded-xl p-3 text-left font-mono text-[11px] text-[#554f45] space-y-1">
+                        <p className="font-bold text-[#1e1c19]">Diagnostic Error: ERR_CONNECTION_TIMED_OUT</p>
+                        <p>Action: Dropped by Campus-Core-Router GigabitEthernet0/0</p>
+                        <p>Access List: CAMPUS-FIREWALL (DENY 192.168.10.0/24 to 192.168.30.0/24)</p>
+                        <p>Destination Host: Administratively Prohibited</p>
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  <div className="text-center text-xs font-mono text-[#8c8477] py-16 space-y-2">
+                    <Globe className="w-8 h-8 mx-auto text-[#b0a898]" />
+                    <p>Enter a campus URL above and click &apos;Go&apos; to load via Cisco Packet Tracer.</p>
+                    <p className="text-[11px] text-[#a09888]">
+                      Simulates DNS resolution through Campus-DNS-Server and HTTP delivery through departmental web servers.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="px-4 py-1.5 bg-[#f2eee5] border-t border-[#dfd8c8] flex flex-wrap items-center justify-between text-[11px] font-mono text-[#706b63]">
+                <div className="flex items-center space-x-3">
+                  <span>
+                    Status:{' '}
+                    <strong className={browserResult?.success ? 'text-emerald-700' : browserResult ? 'text-rose-700' : 'text-[#706b63]'}>
+                      {browserResult?.status || 'Ready'}
+                    </strong>
+                  </span>
+                  <span>|</span>
+                  <span>Server: {browserResult?.server || 'Idle'}</span>
+                </div>
+                <span>Client Host: {browserDevice}</span>
+              </div>
             </div>
           </div>
         )}
