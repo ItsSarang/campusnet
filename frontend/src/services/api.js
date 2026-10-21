@@ -64,4 +64,18 @@ export const api = {
     const res = await fetch(`${API_BASE}/events`);
     return res.json();
   },
+
+  async getRouterRoutes() {
+    const res = await fetch(`${API_BASE}/router/routes`);
+    return res.json();
+  },
+
+  async toggleLink(departmentId, action) {
+    const res = await fetch(`${API_BASE}/topology/link/toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ departmentId, action }),
+    });
+    return res.json();
+  },
 };

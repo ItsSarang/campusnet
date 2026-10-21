@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 import datetime
 import logging
 from flask import Flask, jsonify, request
@@ -21,6 +22,7 @@ DEPARTMENTS = {
     "dept-cs": {
         "id": "dept-cs",
         "name": "Department of Computer Science",
+        "block": "Academic Block A - Computer Science",
         "code": "CS",
         "vlan": 10,
         "subnet": "192.168.10.0/24",
@@ -31,6 +33,7 @@ DEPARTMENTS = {
     "dept-lib": {
         "id": "dept-lib",
         "name": "University Library",
+        "block": "Academic Block B - Central Library",
         "code": "LIB",
         "vlan": 20,
         "subnet": "192.168.20.0/24",
@@ -41,6 +44,7 @@ DEPARTMENTS = {
     "dept-admin": {
         "id": "dept-admin",
         "name": "Campus Administration",
+        "block": "Academic Block C - Administration",
         "code": "ADMIN",
         "vlan": 30,
         "subnet": "192.168.30.0/24",
@@ -51,6 +55,7 @@ DEPARTMENTS = {
     "dept-dc": {
         "id": "dept-dc",
         "name": "Campus Data Center",
+        "block": "Campus Data Center - Server Facility",
         "code": "DC",
         "vlan": 100,
         "subnet": "192.168.100.0/24",
@@ -60,12 +65,87 @@ DEPARTMENTS = {
     },
 }
 
+BUILDINGS = [
+    {
+        "id": "block-cs",
+        "name": "Academic Block A - Computer Science",
+        "departmentId": "dept-cs",
+        "vlan": 10,
+        "subnet": "192.168.10.0/24",
+        "color": "#3b82f6",
+        "x": 40,
+        "y": 80,
+        "width": 380,
+        "height": 400,
+    },
+    {
+        "id": "block-lib",
+        "name": "Academic Block B - Central Library",
+        "departmentId": "dept-lib",
+        "vlan": 20,
+        "subnet": "192.168.20.0/24",
+        "color": "#10b981",
+        "x": 40,
+        "y": 520,
+        "width": 380,
+        "height": 400,
+    },
+    {
+        "id": "block-admin",
+        "name": "Academic Block C - Administration",
+        "departmentId": "dept-admin",
+        "vlan": 30,
+        "subnet": "192.168.30.0/24",
+        "color": "#f59e0b",
+        "x": 960,
+        "y": 80,
+        "width": 380,
+        "height": 400,
+    },
+    {
+        "id": "block-dc",
+        "name": "Campus Data Center - Server Facility",
+        "departmentId": "dept-dc",
+        "vlan": 100,
+        "subnet": "192.168.100.0/24",
+        "color": "#8b5cf6",
+        "x": 960,
+        "y": 520,
+        "width": 380,
+        "height": 400,
+    },
+    {
+        "id": "block-core",
+        "name": "Campus Core Distribution Hub",
+        "departmentId": "core",
+        "vlan": 1,
+        "subnet": "802.1Q Backbone",
+        "color": "#6366f1",
+        "x": 460,
+        "y": 120,
+        "width": 460,
+        "height": 460,
+    },
+]
+
+CUT_DEPARTMENTS = set()
+
 EVENT_LOGS = [
     {
         "id": 1,
         "timestamp": "12:00:00",
         "type": "SYSTEM",
         "message": "Campus backbone initialized with Cisco Packet Tracer.",
+    }
+]
+
+ROUTING_HISTORY = [
+    {
+        "id": 1,
+        "timestamp": datetime.datetime.now().strftime("%H:%M:%S"),
+        "event": "Initial Routing Table Synced",
+        "detail": "Baseline Inter-VLAN sub-interfaces active on Campus-Core-Router",
+        "route_count": 8,
     }
 ]
 
@@ -107,6 +187,49 @@ def log_event(event_type: str, message: str):
         EVENT_LOGS.pop()
 
 
+def parse_routing_table(raw_output: str):
+    routes = []
+    for line in raw_output.splitlines():
+        line = line.strip()
+        m_conn = re.match(
+            r"^([A-Z*]+)\s+([0-9\./]+)\s+is directly connected,\s+(.+)$", line
+        )
+        if m_conn:
+            code, prefix, iface = m_conn.groups()
+            route_type = (
+                "Directly Connected"
+                if code == "C"
+                else "Local Interface"
+                if code == "L"
+                else "Static"
+            )
+            routes.append(
+                {
+                    "code": code,
+                    "type": route_type,
+                    "prefix": prefix,
+                    "target": iface,
+                    "status": "Active",
+                }
+            )
+            continue
+        m_via = re.match(
+            r"^([A-Z*]+)\s+([0-9\./]+)\s+\[[0-9/]+\]\s+via\s+(.+)$", line
+        )
+        if m_via:
+            code, prefix, next_hop = m_via.groups()
+            routes.append(
+                {
+                    "code": code,
+                    "type": "Static Route" if code == "S" else "Dynamic",
+                    "prefix": prefix,
+                    "target": next_hop,
+                    "status": "Active",
+                }
+            )
+    return routes
+
+
 @app.route("/api/status", methods=["GET"])
 def get_status():
     try:
@@ -119,6 +242,7 @@ def get_status():
                 "devices": raw_status.get("devices", 0),
                 "links": raw_status.get("links", 0),
                 "error": raw_status.get("error"),
+                "cutDepartments": list(CUT_DEPARTMENTS),
             }
         )
     except Exception as e:
@@ -136,6 +260,11 @@ def get_topology():
     try:
         devices = pt.list_devices()
         links = pt.list_links()
+
+        cs_pc_count = 0
+        lib_pc_count = 0
+        admin_pc_count = 0
+        dc_pc_count = 0
 
         nodes = []
         for d in devices:
@@ -164,14 +293,40 @@ def get_topology():
             elif kind == "server":
                 flow_type = "serverNode"
 
+            if name == "Campus-Core-Router":
+                pos = {"x": 560, "y": 140}
+            elif name == "Core-Dist-SW":
+                pos = {"x": 560, "y": 280}
+            elif name == "SW-CS":
+                pos = {"x": 150, "y": 140}
+            elif name == "SW-LIB":
+                pos = {"x": 150, "y": 560}
+            elif name == "SW-ADMIN":
+                pos = {"x": 970, "y": 140}
+            elif name == "SW-SERVERS":
+                pos = {"x": 970, "y": 560}
+            elif name == "Campus-DNS-Server":
+                pos = {"x": 970, "y": 700}
+            elif dept_id == "dept-cs":
+                pos = {"x": 80 + (cs_pc_count % 2) * 140, "y": 280 + (cs_pc_count // 2) * 90}
+                cs_pc_count += 1
+            elif dept_id == "dept-lib":
+                pos = {"x": 80 + (lib_pc_count % 2) * 140, "y": 700 + (lib_pc_count // 2) * 90}
+                lib_pc_count += 1
+            elif dept_id == "dept-admin":
+                pos = {"x": 900 + (admin_pc_count % 2) * 140, "y": 280 + (admin_pc_count // 2) * 90}
+                admin_pc_count += 1
+            elif dept_id == "dept-dc":
+                pos = {"x": 900 + (dc_pc_count % 2) * 140, "y": 700 + (dc_pc_count // 2) * 90}
+                dc_pc_count += 1
+            else:
+                pos = {"x": d.get("x", 400.0) - 200, "y": d.get("y", 300.0) - 100}
+
             nodes.append(
                 {
                     "id": name,
                     "type": flow_type,
-                    "position": {
-                        "x": d.get("x", 400.0) - 200,
-                        "y": d.get("y", 300.0) - 100,
-                    },
+                    "position": pos,
                     "data": {
                         "label": name,
                         "kind": kind,
@@ -189,21 +344,150 @@ def get_topology():
             dev_b = link.get("b", {}).get("device", "")
             port_b = link.get("b", {}).get("port", "")
 
+            link_dept = None
+            for dept_key, dept_val in DEPARTMENTS.items():
+                if dept_val["switch"] in (dev_a, dev_b):
+                    link_dept = dept_key
+                    break
+
+            is_cut = link_dept in CUT_DEPARTMENTS
+
+            edge_style = (
+                {"stroke": "#ef4444", "strokeWidth": 3, "strokeDasharray": "6,6"}
+                if is_cut
+                else {"stroke": "#64748b", "strokeWidth": 2}
+            )
+
+            label_text = (
+                f"{port_a} <-> {port_b} [SEVERED]"
+                if is_cut
+                else f"{port_a} <-> {port_b}"
+            )
+
             edges.append(
                 {
                     "id": f"link-{idx}-{dev_a}-{dev_b}",
                     "source": dev_a,
                     "target": dev_b,
-                    "label": f"{port_a} <-> {port_b}",
-                    "animated": True,
-                    "style": {"stroke": "#64748b", "strokeWidth": 2},
+                    "label": label_text,
+                    "animated": not is_cut,
+                    "isCut": is_cut,
+                    "departmentId": link_dept,
+                    "style": edge_style,
                 }
             )
 
-        return jsonify({"nodes": nodes, "edges": edges})
+        return jsonify(
+            {
+                "nodes": nodes,
+                "edges": edges,
+                "buildings": BUILDINGS,
+                "cutDepartments": list(CUT_DEPARTMENTS),
+            }
+        )
     except Exception as e:
         logger.error(f"Topology error: {e}")
-        return jsonify({"nodes": [], "edges": [], "error": str(e)}), 500
+        return jsonify({"nodes": [], "edges": [], "buildings": BUILDINGS, "error": str(e)}), 500
+
+
+@app.route("/api/topology/link/toggle", methods=["POST"])
+def toggle_link():
+    data = request.json or {}
+    dept_id = data.get("departmentId")
+    action = data.get("action", "toggle")
+
+    dept = DEPARTMENTS.get(dept_id)
+    if not dept:
+        return jsonify({"error": "Invalid department ID"}), 400
+
+    sub_iface = f"GigabitEthernet0/0.{dept['vlan']}"
+
+    if action == "toggle":
+        action = "restore" if dept_id in CUT_DEPARTMENTS else "cut"
+
+    if action == "cut":
+        cmd = f"configure terminal\ninterface {sub_iface}\nshutdown\nend\n"
+        pt.run_cli("Campus-Core-Router", cmd)
+        CUT_DEPARTMENTS.add(dept_id)
+        log_event(
+            "OUTAGE",
+            f"Physical uplink severed for {dept['name']}. Subnet {dept['subnet']} unreachable.",
+        )
+    else:
+        cmd = f"configure terminal\ninterface {sub_iface}\nno shutdown\nend\n"
+        pt.run_cli("Campus-Core-Router", cmd)
+        CUT_DEPARTMENTS.discard(dept_id)
+        log_event(
+            "RESTORED",
+            f"Link restored for {dept['name']}. Subnet {dept['subnet']} reconnected.",
+        )
+
+    try:
+        pt.call_tool("fast_forward")
+    except Exception:
+        pass
+
+    raw_routes = pt.run_cli("Campus-Core-Router", "show ip route\n")
+    routes = parse_routing_table(raw_routes)
+
+    event_text = (
+        f"Route Dropped: {dept['subnet']}"
+        if action == "cut"
+        else f"Route Restored: {dept['subnet']}"
+    )
+    detail_text = (
+        f"{dept['name']} interface {sub_iface} shut down (Cable Cut)."
+        if action == "cut"
+        else f"{dept['name']} interface {sub_iface} restored (Cable Repaired)."
+    )
+
+    ROUTING_HISTORY.insert(
+        0,
+        {
+            "id": len(ROUTING_HISTORY) + 1,
+            "timestamp": datetime.datetime.now().strftime("%H:%M:%S"),
+            "event": event_text,
+            "detail": detail_text,
+            "route_count": len(routes),
+        },
+    )
+
+    return jsonify(
+        {
+            "success": True,
+            "departmentId": dept_id,
+            "action": action,
+            "isCut": dept_id in CUT_DEPARTMENTS,
+            "routes": routes,
+            "history": ROUTING_HISTORY,
+        }
+    )
+
+
+@app.route("/api/router/routes", methods=["GET"])
+def get_router_routes():
+    try:
+        raw_routes = pt.run_cli("Campus-Core-Router", "show ip route\n")
+        routes = parse_routing_table(raw_routes)
+        return jsonify(
+            {
+                "routes": routes,
+                "raw": raw_routes,
+                "history": ROUTING_HISTORY,
+                "cutDepartments": list(CUT_DEPARTMENTS),
+            }
+        )
+    except Exception as e:
+        logger.error(f"Routing table error: {e}")
+        return jsonify(
+            {
+                "routes": [],
+                "raw": "",
+                "history": ROUTING_HISTORY,
+                "cutDepartments": list(CUT_DEPARTMENTS),
+                "error": str(e),
+            }
+        ), 200
 
 
 @app.route("/api/devices", methods=["GET"])
