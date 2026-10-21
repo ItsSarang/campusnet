@@ -10,7 +10,6 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
   const [pinging, setPinging] = useState(false);
   const [pingResult, setPingResult] = useState(null);
 
-  // ACL Form
   const [aclModalOpen, setAclModalOpen] = useState(false);
   const [aclName, setAclName] = useState('Block CS to Admin Subnet');
   const [aclAction, setAclAction] = useState('deny');
@@ -66,7 +65,6 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
       <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-white">Communication & Security Policy Center</h2>
@@ -83,9 +81,7 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
         </button>
       </div>
 
-      {/* Ping Simulator Console */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left: Ping Form */}
         <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow flex flex-col justify-between">
           <div>
             <div className="flex items-center space-x-2 text-sky-400 mb-4">
@@ -191,7 +187,6 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
           )}
         </div>
 
-        {/* Right: Live CLI Terminal Output */}
         <div className="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow font-mono text-xs flex flex-col">
           <div className="flex items-center justify-between pb-3 border-b border-slate-800 text-slate-400 mb-3">
             <div className="flex items-center space-x-2">
@@ -204,12 +199,11 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
           <div className="flex-1 bg-black/50 p-4 rounded-lg border border-slate-900 text-emerald-400 overflow-y-auto whitespace-pre font-mono text-xs min-h-[220px]">
             {pingResult
               ? pingResult.output
-              : `// Ready to execute. Select a host and click 'Transmit Ping Packets'.\n// The command prompt inside Packet Tracer will run: ping <target_ip>`}
+              : `Ready to execute. Select a host and click 'Transmit Ping Packets'.\nThe command prompt inside Packet Tracer will run: ping <target_ip>`}
           </div>
         </div>
       </div>
 
-      {/* ACL Policy Rules Table */}
       <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden shadow">
         <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -262,7 +256,6 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
         </div>
       </div>
 
-      {/* Apply ACL Modal */}
       {aclModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 w-full max-w-md shadow-2xl">

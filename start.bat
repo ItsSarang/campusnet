@@ -1,22 +1,17 @@
 @echo off
-REM CampusNet — 1-Click Startup Script (Windows)
-REM Automatically initializes virtual environment, installs packages, and launches both services.
-
-title CampusNet — University Campus Network Manager
+title CampusNet - Campus Network Manager
 
 echo ==========================================================
-echo   CampusNet — University Campus Network Management System
-echo   Live Cisco Packet Tracer Integration
+echo   CampusNet - Campus Network Management System
+echo   Cisco Packet Tracer Integration
 echo ==========================================================
 echo.
 
-REM 1. Detect Python
 where python >nul 2>nul
 if %errorlevel% neq 0 (
     where py >nul 2>nul
     if %errorlevel% neq 0 (
-        echo [ERROR] Python 3 is not installed or not in your PATH.
-        echo Please install Python 3 from https://www.python.org/
+        echo [ERROR] Python 3 is not installed or not in PATH.
         pause
         exit /b 1
     ) else (
@@ -26,28 +21,25 @@ if %errorlevel% neq 0 (
     set PY_CMD=python
 )
 
-REM 2. Check and setup virtual environment
 if not exist "backend\.venv" (
-    echo [1/4] Creating Python virtual environment in backend\.venv ...
+    echo [SETUP] Creating Python virtual environment in backend\.venv...
     %PY_CMD% -m venv backend\.venv
     call backend\.venv\Scripts\pip install --upgrade pip --quiet
-    echo Installing backend dependencies (Flask, CORS)...
+    echo [SETUP] Installing backend dependencies...
     call backend\.venv\Scripts\pip install -r backend\requirements.txt --quiet
     echo [OK] Backend ready.
 ) else (
     if not exist "backend\.venv\Scripts\flask.exe" (
-        echo Installing missing backend dependencies...
+        echo [SETUP] Installing missing backend dependencies...
         call backend\.venv\Scripts\pip install -r backend\requirements.txt --quiet
     )
 )
 
-REM 3. Check and install frontend packages
 if not exist "frontend\node_modules" (
-    echo [2/4] Installing frontend packages (npm install) ...
+    echo [SETUP] Installing frontend packages...
     where npm >nul 2>nul
     if %errorlevel% neq 0 (
-        echo [ERROR] Node.js / npm is not installed or not in your PATH.
-        echo Please install Node.js from https://nodejs.org/
+        echo [ERROR] Node.js / npm is not installed or not in PATH.
         pause
         exit /b 1
     )
@@ -59,15 +51,15 @@ if not exist "frontend\node_modules" (
 
 echo.
 echo ----------------------------------------------------------
-echo PACKET TRACER REMINDER:
-echo   1. Open Cisco Packet Tracer on your computer.
-echo   2. Open: packet-tracer\campusnet_backbone.pkt
+echo Packet Tracer Status Notice:
+echo Ensure Cisco Packet Tracer is running with:
+echo packet-tracer\campusnet_backbone.pkt
 echo ----------------------------------------------------------
 echo.
 
-echo [3/4] Starting Flask API backend (port 5000)...
+echo [INFO] Starting Flask backend on http://127.0.0.1:5000...
 start "CampusNet Backend API" cmd /k "backend\.venv\Scripts\python backend\app.py"
 
-echo [4/4] Starting Vite React Frontend (port 5173)...
+echo [INFO] Starting Vite frontend on http://localhost:5173...
 cd frontend
 call npm run dev

@@ -80,7 +80,6 @@ export const IPManager = ({ departments, devices, onRefresh }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
       <div className="flex items-center justify-between bg-slate-900 p-6 rounded-xl border border-slate-800 shadow">
         <div>
           <h2 className="text-xl font-bold text-white">Campus Structure & IP Manager</h2>
@@ -106,7 +105,6 @@ export const IPManager = ({ departments, devices, onRefresh }) => {
         </div>
       </div>
 
-      {/* Status Messages */}
       {message && (
         <div
           className={`p-4 rounded-xl border flex items-center space-x-3 text-sm ${
@@ -124,7 +122,6 @@ export const IPManager = ({ departments, devices, onRefresh }) => {
         </div>
       )}
 
-      {/* Devices Table */}
       <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden shadow">
         <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
           <h3 className="font-bold text-white text-base">Active Campus Devices ({devices.length})</h3>
@@ -204,7 +201,6 @@ export const IPManager = ({ departments, devices, onRefresh }) => {
         </div>
       </div>
 
-      {/* Add Device Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 w-full max-w-md shadow-2xl">
@@ -240,7 +236,7 @@ export const IPManager = ({ departments, devices, onRefresh }) => {
                 >
                   {departments.map((d) => (
                     <option key={d.id} value={d.id}>
-                      {d.name} (VLAN {d.vlan} • {d.subnet})
+                      {d.name} (VLAN {d.vlan} - {d.subnet})
                     </option>
                   ))}
                 </select>

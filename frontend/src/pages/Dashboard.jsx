@@ -16,7 +16,6 @@ export const Dashboard = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
       <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">
@@ -48,7 +47,6 @@ export const Dashboard = ({
         </div>
       </div>
 
-      {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-slate-850 p-5 rounded-xl border border-slate-800 bg-slate-900/60 shadow">
           <div className="flex items-center justify-between">
@@ -107,9 +105,7 @@ export const Dashboard = ({
         </div>
       </div>
 
-      {/* Subnet Utilization and Events */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Department Subnets */}
         <div className="lg:col-span-2 bg-slate-900/80 p-6 rounded-xl border border-slate-800 shadow">
           <h2 className="text-lg font-bold text-white mb-4">Department Subnets & VLANs</h2>
           <div className="space-y-4">
@@ -149,7 +145,6 @@ export const Dashboard = ({
           </div>
         </div>
 
-        {/* Right: Live Event Feed */}
         <div className="bg-slate-900/80 p-6 rounded-xl border border-slate-800 shadow flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-white">Simulation Log</h2>

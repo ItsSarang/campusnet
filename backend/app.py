@@ -1,17 +1,10 @@
-"""
-CampusNet - Local Flask Backend Server
-Interfaces with Cisco Packet Tracer via pt_client and exposes a RESTful API
-for the React frontend.
-"""
-
 import os
 import sys
-import re
+import datetime
 import logging
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-# Ensure current directory is in path for module imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from pt_client import PacketTracerClient
 
@@ -24,7 +17,6 @@ CORS(app)
 pt = PacketTracerClient()
 pt.start()
 
-# Baseline Departments metadata
 DEPARTMENTS = {
     "dept-cs": {
         "id": "dept-cs",
@@ -34,7 +26,7 @@ DEPARTMENTS = {
         "subnet": "192.168.10.0/24",
         "gateway": "192.168.10.1",
         "switch": "SW-CS",
-        "color": "#3b82f6",  # blue
+        "color": "#3b82f6",
     },
     "dept-lib": {
         "id": "dept-lib",
@@ -44,7 +36,7 @@ DEPARTMENTS = {
         "subnet": "192.168.20.0/24",
         "gateway": "192.168.20.1",
         "switch": "SW-LIB",
-        "color": "#10b981",  # green
+        "color": "#10b981",
     },
     "dept-admin": {
         "id": "dept-admin",
@@ -54,7 +46,7 @@ DEPARTMENTS = {
         "subnet": "192.168.30.0/24",
         "gateway": "192.168.30.1",
         "switch": "SW-ADMIN",
-        "color": "#f59e0b",  # amber
+        "color": "#f59e0b",
     },
     "dept-dc": {
         "id": "dept-dc",
@@ -64,11 +56,10 @@ DEPARTMENTS = {
         "subnet": "192.168.100.0/24",
         "gateway": "192.168.100.1",
         "switch": "SW-SERVERS",
-        "color": "#8b5cf6",  # purple
+        "color": "#8b5cf6",
     },
 }
 
-# In-memory test and event history
 EVENT_LOGS = [
     {
         "id": 1,
@@ -103,8 +94,6 @@ ACL_RULES = [
 
 
 def log_event(event_type: str, message: str):
-    import datetime
-
     EVENT_LOGS.insert(
         0,
         {
@@ -118,14 +107,8 @@ def log_event(event_type: str, message: str):
         EVENT_LOGS.pop()
 
 
-# -----------------------------------------------------------------------------
-# API Endpoints
-# -----------------------------------------------------------------------------
-
-
 @app.route("/api/status", methods=["GET"])
 def get_status():
-    """Returns live connection status with Cisco Packet Tracer."""
     try:
         raw_status = pt.get_status()
         return jsonify(
@@ -145,13 +128,11 @@ def get_status():
 
 @app.route("/api/departments", methods=["GET"])
 def get_departments():
-    """Returns all campus departments and subnet parameters."""
     return jsonify(list(DEPARTMENTS.values()))
 
 
 @app.route("/api/topology", methods=["GET"])
 def get_topology():
-    """Returns React Flow nodes and edges generated from live Packet Tracer devices."""
     try:
         devices = pt.list_devices()
         links = pt.list_links()
@@ -162,11 +143,9 @@ def get_topology():
             model = d.get("model", "")
             name = d.get("name", "")
 
-            # Filter internal power devices
             if kind == "power_distribution_device":
                 continue
 
-            # Determine department affinity
             dept_id = None
             if "CS" in name:
                 dept_id = "dept-cs"
@@ -177,7 +156,6 @@ def get_topology():
             elif "SERVER" in name or "DNS" in name:
                 dept_id = "dept-dc"
 
-            # Determine React Flow custom node type
             flow_type = "hostNode"
             if kind == "router":
                 flow_type = "routerNode"
@@ -216,7 +194,7 @@ def get_topology():
                     "id": f"link-{idx}-{dev_a}-{dev_b}",
                     "source": dev_a,
                     "target": dev_b,
-                    "label": f"{port_a} ↔ {port_b}",
+                    "label": f"{port_a} <-> {port_b}",
                     "animated": True,
                     "style": {"stroke": "#64748b", "strokeWidth": 2},
                 }
@@ -230,7 +208,6 @@ def get_topology():
 
 @app.route("/api/devices", methods=["GET"])
 def get_devices():
-    """Returns detailed devices list."""
     try:
         devices = pt.list_devices()
         filtered = [
@@ -243,10 +220,6 @@ def get_devices():
 
 @app.route("/api/devices/add", methods=["POST"])
 def add_device():
-    """
-    Creates a new PC, connects it to the department switch,
-    and configures its IP live in Packet Tracer.
-    """
     data = request.json or {}
     name = data.get("name")
     dept_id = data.get("departmentId", "dept-cs")
@@ -263,11 +236,8 @@ def add_device():
     switch_name = dept["switch"]
     gateway = dept["gateway"]
     is_dhcp = alloc_type == "DHCP"
-
-    # Default IP if DHCP
     ip = static_ip if not is_dhcp else None
 
-    # Calculate coordinates near the department switch
     base_x = 450.0
     base_y = 450.0
     if dept_id == "dept-cs":
@@ -302,7 +272,6 @@ def add_device():
 
 @app.route("/api/devices/<name>", methods=["DELETE"])
 def delete_device(name: str):
-    """Deletes a device from Packet Tracer."""
     try:
         pt.remove_device(name)
         log_event("DEVICE", f"Removed device '{name}' from canvas.")
@@ -313,7 +282,6 @@ def delete_device(name: str):
 
 @app.route("/api/simulate/ping", methods=["POST"])
 def simulate_ping():
-    """Executes a live ping from a PC inside Packet Tracer."""
     data = request.json or {}
     source = data.get("source")
     target = data.get("target")
@@ -334,15 +302,13 @@ def simulate_ping():
 
 @app.route("/api/acl/rules", methods=["GET"])
 def get_acl_rules():
-    """Returns currently modeled ACL rules."""
     return jsonify(ACL_RULES)
 
 
 @app.route("/api/acl/apply", methods=["POST"])
 def apply_acl_rule():
-    """Pushes a new ACL rule directly into the Campus-Core-Router CLI."""
     data = request.json or {}
-    action = data.get("action", "deny").lower()  # permit / deny
+    action = data.get("action", "deny").lower()
     source_subnet = data.get("sourceSubnet", "192.168.10.0 0.0.0.255")
     dest_subnet = data.get("destSubnet", "192.168.30.0 0.0.0.255")
     rule_name = data.get(
@@ -380,13 +346,8 @@ def apply_acl_rule():
 
 @app.route("/api/events", methods=["GET"])
 def get_events():
-    """Returns recent network event log."""
     return jsonify(EVENT_LOGS)
 
-
-# -----------------------------------------------------------------------------
-# Main Runner
-# -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
     logger.info("Starting CampusNet Local API Server on http://127.0.0.1:5000")

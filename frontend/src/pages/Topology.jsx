@@ -10,10 +10,9 @@ import {
   Position,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Cpu, Server, Laptop, HardDrive, RefreshCw } from 'lucide-react';
+import { Cpu, Server, Laptop, HardDrive, RefreshCw, X } from 'lucide-react';
 import { api } from '../services/api';
 
-// Custom Nodes in plain JSX
 const RouterNode = ({ data }) => (
   <div className="bg-slate-900 border-2 border-indigo-500/80 rounded-xl p-3 shadow-xl shadow-indigo-950/50 min-w-[150px]">
     <Handle type="target" position={Position.Top} className="!bg-indigo-400" />
@@ -171,7 +170,6 @@ export const Topology = () => {
           />
         </ReactFlow>
 
-        {/* Node Inspector Drawer */}
         {selectedNode && (
           <div className="absolute right-4 top-4 bottom-4 w-80 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-xl p-5 shadow-2xl z-10 flex flex-col justify-between">
             <div>
@@ -179,9 +177,9 @@ export const Topology = () => {
                 <h3 className="font-bold text-white text-base">{selectedNode.data?.label}</h3>
                 <button
                   onClick={() => setSelectedNode(null)}
-                  className="text-slate-400 hover:text-white text-sm"
+                  className="text-slate-400 hover:text-white"
                 >
-                  ✕
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 

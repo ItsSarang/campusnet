@@ -1,9 +1,3 @@
-"""
-CampusNet - Cisco Packet Tracer Bridge Client
-Communicates with Packet Tracer 9.0 over local PTMP socket (port 39000)
-using the pktctl MCP binary.
-"""
-
 import os
 import json
 import subprocess
@@ -35,7 +29,6 @@ class PacketTracerClient:
         self._is_connected = False
 
     def start(self):
-        """Starts the pktctl child process and completes MCP handshake."""
         with self.lock:
             if self.proc and self.proc.poll() is None:
                 return
@@ -61,8 +54,7 @@ class PacketTracerClient:
                     env=env,
                 )
 
-                # MCP Initialize
-                init_res = self._raw_send(
+                self._raw_send(
                     {
                         "jsonrpc": "2.0",
                         "id": self._next_id(),
@@ -75,7 +67,6 @@ class PacketTracerClient:
                     }
                 )
 
-                # Send initialized notification
                 if self.proc and self.proc.stdin:
                     self.proc.stdin.write(
                         json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"})
@@ -95,7 +86,6 @@ class PacketTracerClient:
                 self._is_connected = False
 
     def stop(self):
-        """Terminates the bridge process."""
         with self.lock:
             if self.proc:
                 try:
@@ -124,7 +114,6 @@ class PacketTracerClient:
         return json.loads(res_line)
 
     def call_tool(self, name: str, arguments: Dict[str, Any] = None) -> Any:
-        """Executes a tool on Packet Tracer."""
         if arguments is None:
             arguments = {}
 
@@ -152,7 +141,6 @@ class PacketTracerClient:
                 msg = content[0].get("text", "Error executing Packet Tracer tool")
                 raise RuntimeError(msg)
 
-            # Return structured or parsed JSON content
             if "structuredContent" in result:
                 return result["structuredContent"]
 
@@ -165,46 +153,34 @@ class PacketTracerClient:
 
             return result
 
-    # -------------------------------------------------------------------------
-    # Convenience Networking Methods
-    # -------------------------------------------------------------------------
-
     def get_status(self) -> Dict[str, Any]:
-        """Returns Packet Tracer connectivity and basic stats."""
         try:
             return self.call_tool("status")
         except Exception as e:
             return {"connected": False, "error": str(e)}
 
     def list_devices(self) -> List[Dict[str, Any]]:
-        """Returns all devices in the Packet Tracer canvas."""
         data = self.call_tool("list_devices")
         return data.get("devices", [])
 
     def list_links(self) -> List[Dict[str, Any]]:
-        """Returns all cable connections between devices."""
         data = self.call_tool("list_links")
         return data.get("links", [])
 
     def list_ports(self, device: str) -> List[Dict[str, Any]]:
-        """Returns all ports and their link states on a device."""
         data = self.call_tool("list_ports", {"device": device})
         return data.get("ports", [])
 
     def run_cli(self, device: str, command: str) -> str:
-        """Runs a Cisco IOS command on a router or switch."""
         data = self.call_tool("run_cli", {"device": device, "command": command})
         return data.get("output", "") if isinstance(data, dict) else str(data)
 
     def run_ping(self, source_pc: str, target_ip: str) -> Dict[str, Any]:
-        """Runs a ping test from a host PC inside Packet Tracer."""
         cmd = f"ping {target_ip}"
         data = self.call_tool(
             "run_host_command", {"device": source_pc, "command": cmd}
         )
         output = data.get("output", "") if isinstance(data, dict) else str(data)
-
-        # Basic parse of ping output
         success = "Received = 0" not in output and "Reply from" in output
         return {
             "source": source_pc,
@@ -224,17 +200,12 @@ class PacketTracerClient:
         x: Optional[float] = None,
         y: Optional[float] = None,
     ) -> Dict[str, Any]:
-        """
-        Spawns a PC, finds a free switch port, cables it, and configures IP/DHCP.
-        """
-        # 1. Add PC device
         args = {"model": "PC-PT", "name": name}
         if x is not None and y is not None:
             args["x"] = int(x)
             args["y"] = int(y)
         self.call_tool("add_device", args)
 
-        # 2. Find first free access port on department switch (Fa0/2 - Fa0/23)
         links = self.list_links()
         used_ports = set()
         for l in links:
@@ -257,7 +228,6 @@ class PacketTracerClient:
         if not free_port:
             free_port = "FastEthernet0/5"
 
-        # 3. Cable PC to Switch
         self.call_tool(
             "connect",
             {
@@ -269,7 +239,6 @@ class PacketTracerClient:
             },
         )
 
-        # 4. Configure IP / DHCP
         host_args = {"device": name, "dhcp": is_dhcp}
         if not is_dhcp and ip:
             host_args["ip"] = ip
@@ -278,7 +247,6 @@ class PacketTracerClient:
             host_args["dns"] = "192.168.100.10"
         self.call_tool("configure_host", host_args)
 
-        # 5. Fast forward spanning tree / ARP
         try:
             self.call_tool("fast_forward")
         except Exception:
@@ -293,7 +261,6 @@ class PacketTracerClient:
         }
 
     def remove_device(self, name: str) -> bool:
-        """Removes a device from the Packet Tracer canvas."""
         self.call_tool("remove_device", {"name": name})
         return True
 
@@ -305,7 +272,6 @@ class PacketTracerClient:
         gateway: str = "192.168.10.1",
         is_dhcp: bool = False,
     ) -> Dict[str, Any]:
-        """Updates IP settings on an existing PC."""
         host_args = {"device": name, "dhcp": is_dhcp}
         if not is_dhcp and ip:
             host_args["ip"] = ip
