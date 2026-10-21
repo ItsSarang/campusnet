@@ -7,6 +7,35 @@ CampusNet is a Computer Networks web application designed to model, visualize, a
 
 ---
 
+## 🚀 Quick Start for Teammates & Collaborators
+
+Running CampusNet locally takes **literally two steps**:
+
+### 1. Open the Cisco Packet Tracer Backbone
+- Launch **Cisco Packet Tracer** on your machine.
+- Click **File $\rightarrow$ Open** and select:
+  📁 [`packet-tracer/campusnet_backbone.pkt`](packet-tracer/campusnet_backbone.pkt)
+
+### 2. Run the 1-Click Startup Script
+
+**On macOS / Linux:**
+```bash
+./start.sh
+```
+
+**On Windows:**
+Double-click `start.bat` or run:
+```cmd
+start.bat
+```
+
+> **✨ Zero-Friction Setup:** The script automatically sets up the Python virtual environment (`backend/.venv`), installs backend dependencies (`requirements.txt`), and installs frontend npm packages (`frontend/node_modules`) on first run.
+
+- **Web Application:** `http://localhost:5173`
+- **Backend API:** `http://127.0.0.1:5000`
+
+---
+
 ## Quick Links to Documentation
 
 - **[Project Specification (`PROJECT_SPEC.md`)](PROJECT_SPEC.md)** — Authoritative functional requirements, entity relationships, and acceptance criteria.
@@ -18,6 +47,7 @@ CampusNet is a Computer Networks web application designed to model, visualize, a
   - [System Architecture](docs/architecture.md)
   - [Campus Network Design & Addressing](docs/network-design.md)
   - [Data Model & TypeScript Interfaces](docs/data-model.md)
+  - [Packet Tracer Setup Guide](docs/packet-tracer-setup.md)
   - [Architecture Decision Records (ADRs)](docs/decisions/README.md)
 
 ---
@@ -92,6 +122,9 @@ campusnet/
 │   └── README.md             # Frontend architecture & planned execution commands
 ├── backend/
 │   └── README.md             # Backend architecture & planned REST API design
+├── packet-tracer/
+│   ├── README.md             # Packet Tracer setup & usage instructions
+│   └── campusnet_backbone.pkt# Baseline campus topology file
 └── docs/
     ├── architecture.md       # Frontend component breakdown & data flow
     ├── network-design.md     # Campus topology, VLANs, subnets, & ACL rules

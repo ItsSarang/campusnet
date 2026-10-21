@@ -10,15 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Repository Foundation & AI Collaboration Setup:**
-  - Initialized repository structure with `frontend/`, `backend/`, and `docs/` directories.
-  - Authored comprehensive architecture documentation in `docs/architecture.md`.
-  - Authored campus network design and addressing specification in `docs/network-design.md`.
-  - Authored entity schemas and TypeScript interfaces in `docs/data-model.md`.
-  - Established Architecture Decision Records framework in `docs/decisions/README.md` (ADR-0001, ADR-0002, ADR-0003).
-  - Authored authoritative requirements specification in `PROJECT_SPEC.md`.
-  - Established persistent development handoff protocol in `DEVELOPMENT_REPORT.md`.
-  - Authored AI coding agent guidelines and incorporated four-person team collaboration and contributor guidelines directly into `AGENTS.md` and `GEMINI.md`.
-  - Created safe environment template in `.env.example`.
-  - Expanded `.gitignore` to comprehensively cover Python virtual environments, SQLite, OS artifacts, and IDE configs.
-  - Rewrote root `README.md` to serve as a complete project entry point linking strictly to active repository files.
+- **Cisco Packet Tracer 9.0 Live Engine Integration:**
+  - Integrated Cisco Packet Tracer 9.0 as the live network data plane via local PTMP IPC on port 39000.
+  - Authored baseline campus topology in `packet-tracer/campusnet_backbone.pkt`.
+  - Implemented `backend/pt_client.py` and precompiled macOS Apple Silicon bridge binary in `backend/bin/pktctl`.
+  - Implemented Python Flask REST API server in `backend/app.py` with endpoints for status, topology, device provisioning, live ping testing, and router ACL application.
+  - Implemented React 18 + Vite + TypeScript + Tailwind CSS frontend with:
+    - **Dashboard:** Telemetry cards, subnet utilization progress bars, live event feed.
+    - **Topology Explorer:** Interactive `@xyflow/react` canvas with custom Router, Switch, Host, and Server nodes and inspector drawer.
+    - **IP & Department Manager:** Workstation provisioning modal (auto-cabling and IP assignment in Packet Tracer) and device removal.
+    - **Communication & Security Center:** Live ping test console with raw Packet Tracer stdout output and router ACL configuration.
+  - Frontend converted to clean, standard React + Vite in JavaScript/JSX (`.jsx`/`.js`) for maximum simplicity and accessibility.
+  - Implemented 1-click self-bootstrapping startup scripts (`start.sh` for macOS/Linux and `start.bat` for Windows) with automatic Python virtual environment and `npm install` provisioning.
+  - Added streamlined 2-step onboarding quick-start guide to `README.md` for seamless teammate collaboration.
+  - Created unified startup script `start.sh` and `start.bat`.

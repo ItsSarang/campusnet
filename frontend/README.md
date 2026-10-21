@@ -1,65 +1,49 @@
 # CampusNet — Frontend
 
-This directory contains the planned frontend for **CampusNet**, a web application modeling and visualizing a university campus network.
+This directory contains the React + Vite frontend for **CampusNet**, a web application modeling and visualizing an enterprise university campus network.
 
-> **Status:** Planned / Initialization pending. Application pages have not been implemented yet.
+> **Status:** Implemented in pure **React 18+ (JavaScript & JSX)** with **Vite** and **Tailwind CSS**.
 
 ---
 
-## Planned Technology Stack
+## Technology Stack
 
 - **Framework:** [React 18+](https://react.dev/)
 - **Build Tool:** [Vite](https://vitejs.dev/)
-- **Language:** TypeScript (`strict` mode)
+- **Language:** JavaScript (`.js` & `.jsx`)
 - **Styling:** [Tailwind CSS](https://tailwindcss.com/)
 - **Topology Visualization:** [React Flow](https://reactflow.dev/) (`@xyflow/react`)
-- **Metrics & Charts:** [Recharts](https://recharts.org/) (used selectively on Dashboard/Analytics)
+- **Charts:** [Recharts](https://recharts.org/)
 - **Icons:** [Lucide React](https://lucide.dev/)
 
 ---
 
-## Four Planned Application Pages
+## Application Pages
 
-1. **Dashboard (`/dashboard` or `/`)**
-   - High-level metrics: departments, active subnets, total vs. assigned IP count, lab occupancy.
-   - Quick network status indicators and simulated event feed.
-   - Network utilization summary charts.
+1. **Dashboard**
+   - High-level telemetry synchronized live with Cisco Packet Tracer.
+   - Core router, distribution switch, workstation, and server metrics.
+   - Department subnet utilization bars (VLAN 10, 20, 30, 100).
+   - Live network event feed.
 
-2. **Topology Explorer (`/topology`)**
-   - Interactive, zoomable network diagram powered by React Flow.
-   - Core router, distribution switches, department switches, lab workstations, and campus servers.
-   - Node inspection panel (drawer/modal) displaying IP, MAC, VLAN, subnet mask, gateway, and status.
-   - Filter by VLAN, department, or device type.
+2. **Topology Explorer**
+   - Interactive, zoomable network canvas powered by `@xyflow/react`.
+   - Node coordinates and links retrieved directly from Cisco Packet Tracer.
+   - Custom node cards for Router, Switch, Host, and Server.
+   - Node inspection drawer on click.
 
-3. **Campus Structure & IP Manager (`/ip-manager`)**
-   - Department and lab hierarchical tree.
-   - IP address allocation table per subnet.
-   - Dual allocation modes: DHCP-style automatic assignment vs. manually configured static IP.
-   - Validation engine: prevents IP collision, subnet boundary overflow, gateway conflict, and broadcast address assignment.
-   - Device de-provisioning with IP release back to available pool.
+3. **Campus Structure & IP Manager**
+   - Live workstation table.
+   - "Add Workstation" modal that dynamically creates a `PC-PT` on the canvas, finds an open switch port, connects a straight-through cable, and sets IP/DHCP in Packet Tracer.
+   - Device removal with one click.
 
-4. **Communication & Security Center (`/security`)**
-   - Inter-department and inter-device communication policy evaluation.
-   - Source-to-destination reachability testing (simulated ping / packet flow).
-   - Access-Control List (ACL) rule table (Permit/Deny rules with priority order).
-   - Diagnostic explanation on communication denial (e.g., "Denied by ACL Rule #3: Block Guest VLAN to Admin Server").
-   - Test history log with status and timestamps.
+4. **Communication & Security Center**
+   - Interactive ICMP ping execution that runs the command prompt inside Packet Tracer and displays real terminal output.
+   - Router Access Control List (ACL) configuration table.
 
 ---
 
-## Architecture & Implementation Strategy
-
-Development follows a **frontend-first approach**:
-1. **Mock Data Layer:** Realistic, strongly-typed mock data (`src/data/mockNetwork.ts`) simulating campus departments, VLANs, subnets, devices, and ACL rules.
-2. **In-Memory State & Storage:** React Context or state management store to allow interactive additions, IP allocations, and simulated rule evaluations.
-3. **Networking Validation Utilities:** Client-side IPv4 subnet calculation utilities (`src/utils/networkUtils.ts`) that accurately calculate network address, broadcast address, prefix length, and usable host range.
-4. **Simulation Boundary:** All network operations are explicitly treated and labeled as **models or simulations**. No claims of real packet capture or real DHCP daemon operation.
-
----
-
-## Planned Setup & Execution Instructions
-
-*(These commands will apply once the frontend project files are generated in the next development phase.)*
+## Setup & Execution
 
 ```bash
 # Navigate to frontend folder
@@ -68,14 +52,8 @@ cd frontend
 # Install dependencies
 npm install
 
-# Start development server
+# Start development server (runs on http://localhost:5173)
 npm run dev
-
-# Run TypeScript type check
-npm run typecheck
-
-# Run linter
-npm run lint
 
 # Build production bundle
 npm run build
@@ -83,27 +61,26 @@ npm run build
 
 ---
 
-## Code & Directory Conventions
-
-Planned directory layout once initialized:
+## Directory Layout
 
 ```text
 frontend/
 ├── src/
-│   ├── assets/          # Static assets (images, icons)
-│   ├── components/      # Shared reusable UI components (Button, Modal, Card, Table)
-│   ├── layout/          # App layout, Navbar, Sidebar
-│   ├── pages/           # Page views (Dashboard, Topology, IPManager, SecurityCenter)
-│   ├── types/           # TypeScript interfaces (network.ts, acl.ts, campus.ts)
-│   ├── data/            # Mock dataset (departments, devices, subnets, rules)
-│   ├── context/         # React Context for network state management
-│   ├── utils/           # IP math, subnet parsing, ACL evaluation logic
-│   ├── App.tsx          # Main routing & application component
-│   └── main.tsx         # Vite application entry point
-├── public/              # Public static assets
-├── index.html           # HTML entry point
-├── package.json         # Dependencies and scripts
-├── tsconfig.json        # TypeScript configuration
-├── tailwind.config.js   # Tailwind CSS configuration
-└── vite.config.ts       # Vite configuration
+│   ├── components/
+│   │   └── Navbar.jsx        # Top navigation bar & PT status indicator
+│   ├── pages/
+│   │   ├── Dashboard.jsx     # Overview & subnet metrics
+│   │   ├── Topology.jsx      # React Flow network canvas
+│   │   ├── IPManager.jsx     # Workstation provisioning modal & table
+│   │   └── SecurityCenter.jsx# Live ping test console & ACL manager
+│   ├── services/
+│   │   └── api.js            # Fetch calls to Flask REST endpoints
+│   ├── App.jsx               # Main application component & auto-refresh
+│   ├── main.jsx              # React DOM entry point
+│   └── index.css             # Tailwind CSS & React Flow styles
+├── index.html                # HTML template
+├── package.json              # Dependencies and scripts
+├── tailwind.config.js        # Tailwind CSS theme configuration
+├── postcss.config.js         # PostCSS plugins
+└── vite.config.js            # Vite bundler & API proxy configuration
 ```
