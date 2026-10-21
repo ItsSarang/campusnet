@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Deployed clean academic intranet web pages for student.mitwpu.edu and admin.mitwpu.edu presenting Computer Networks Laboratory simulation context without clutter or dummy pills.
   - Implemented authentic browser network error view rendering diagnostic details when traffic is dropped by Core Router ACLs.
 - **Streamlined Security Center View:**
+  - Consolidated action buttons (`View IOS Script` and `Enforce Rules`) directly into the Communication Matrix card header.
+  - Removed redundant top header card, card subtitles, and bottom legend bar from the matrix view to prioritize functional controls.
+  - Refined workstation select dropdowns with generous padding and explicit icon placement to prevent text clipping.
   - Removed redundant 1-click presets card to reduce visual noise and prioritize the Visual Firewall Matrix and live verification browser.
 - **Cisco IOS Script Preview Modal:**
   - Added dedicated syntax modal showing the exact compiled Cisco IOS Extended ACL configuration before and after router enforcement.

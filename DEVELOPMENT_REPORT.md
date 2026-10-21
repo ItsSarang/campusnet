@@ -18,6 +18,8 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 - 3x4 grid covering CS Dept (VLAN 10), Library (VLAN 20), Admin Dept (VLAN 30), and Data Center Servers (VLAN 100).
 - Interactive ALLOW (emerald) and DENY (rose) policy toggles with LOCAL L2 intra-switch indicators.
 - 1-Click Policy Enforcement compiling visual matrix into Cisco IOS Extended ACL (`CAMPUS-FIREWALL`) and pushing to `Campus-Core-Router` live in Packet Tracer.
+- Consolidated `View IOS Script` and `Enforce Rules` actions into the matrix card header, removing redundant top-level banner cards and explanatory text.
+- Removed bottom legend bar to maximize functional focus and streamlined source selector dropdown arrows.
 - Real-time synchronization of active ACL table and simulation feed.
 
 ### 2. Multi-Domain Web Portals & Dedicated Admin Server:

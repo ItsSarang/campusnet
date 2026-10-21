@@ -14,8 +14,8 @@ import {
   Laptop,
   ArrowLeft,
   ArrowRight,
-  AlertCircle,
   ShieldAlert,
+  ChevronDown,
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -174,54 +174,40 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-[#fdfcf9] p-6 rounded-2xl border border-[#dfd8c8] shadow-[0_2px_12px_-2px_rgba(50,40,30,0.05)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-[#1e1c19]">
-            Controlled Communication & Policy Matrix
-          </h2>
-          <p className="text-sm text-[#706b63] mt-1">
-            Department-level visual firewall matrix, 1-click Cisco IOS Extended ACL compilation, and live verification.
-          </p>
-        </div>
-
-        <div className="flex items-center space-x-2.5 shrink-0">
-          <button
-            onClick={() => setScriptModalOpen(true)}
-            className="flex items-center space-x-1.5 px-3.5 py-2 bg-[#eae4d8] hover:bg-[#dfd8c8] text-[#554f45] rounded-xl text-xs font-mono font-semibold border border-[#d8d0bf] transition"
-          >
-            <Code className="w-3.5 h-3.5" />
-            <span>View IOS Script</span>
-          </button>
-          <button
-            onClick={handleEnforceRules}
-            disabled={enforcing}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold shadow-xs transition ${
-              dirty
-                ? 'bg-rose-600 hover:bg-rose-700 text-white animate-pulse'
-                : 'bg-[#1e1c19] hover:bg-[#33302b] text-[#f7f4ed]'
-            }`}
-          >
-            <Shield className={`w-4 h-4 ${enforcing ? 'animate-spin' : ''}`} />
-            <span>{enforcing ? 'Enforcing to Router...' : 'Enforce Rules (1-Click Push)'}</span>
-          </button>
-        </div>
-      </div>
-
       <div className="bg-[#fdfcf9] rounded-2xl border border-[#dfd8c8] p-6 shadow-[0_2px_12px_-2px_rgba(50,40,30,0.05)] space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#dfd8c8] pb-3">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#dfd8c8] pb-3.5">
+          <div className="flex items-center space-x-3">
             <h3 className="font-bold text-[#1e1c19] text-base">
-              Campus Department Communication Matrix (Visual Firewall)
+              Campus Department Communication Matrix
             </h3>
-            <p className="text-xs text-[#706b63] mt-0.5">
-              Click any cell to toggle packet forwarding between departments. Intra-VLAN traffic stays local at Layer 2.
-            </p>
+            {dirty && (
+              <span className="text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-300">
+                Unapplied changes
+              </span>
+            )}
           </div>
-          {dirty && (
-            <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-300">
-              Unapplied changes pending enforcement
-            </span>
-          )}
+
+          <div className="flex items-center space-x-2 shrink-0">
+            <button
+              onClick={() => setScriptModalOpen(true)}
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#eae4d8] hover:bg-[#dfd8c8] text-[#554f45] rounded-xl text-xs font-mono font-semibold border border-[#d8d0bf] transition"
+            >
+              <Code className="w-3.5 h-3.5" />
+              <span>View IOS Script</span>
+            </button>
+            <button
+              onClick={handleEnforceRules}
+              disabled={enforcing}
+              className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-mono font-semibold shadow-xs transition ${
+                dirty
+                  ? 'bg-rose-600 hover:bg-rose-700 text-white animate-pulse'
+                  : 'bg-[#1e1c19] hover:bg-[#33302b] text-[#f7f4ed]'
+              }`}
+            >
+              <Shield className={`w-3.5 h-3.5 ${enforcing ? 'animate-spin' : ''}`} />
+              <span>{enforcing ? 'Enforcing...' : 'Enforce Rules'}</span>
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -294,27 +280,6 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
             </tbody>
           </table>
         </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs font-mono text-[#706b63] border-t border-[#dfd8c8]">
-          <div className="flex items-center space-x-4">
-            <span className="inline-flex items-center space-x-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-              <span>ALLOW: Routed via Campus Core</span>
-            </span>
-            <span className="inline-flex items-center space-x-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-              <span>DENY: Blocked by Extended ACL</span>
-            </span>
-            <span className="inline-flex items-center space-x-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#8c8477]" />
-              <span>LOCAL L2: Switched inside VLAN</span>
-            </span>
-          </div>
-
-          <span className="text-[11px] text-[#8c8477]">
-            Active Cisco IOS ACL: CAMPUS-FIREWALL on Core-Router Gi0/0
-          </span>
-        </div>
       </div>
 
       <div className="bg-[#fdfcf9] rounded-2xl border border-[#dfd8c8] shadow-[0_2px_12px_-2px_rgba(50,40,30,0.05)] overflow-hidden">
@@ -343,10 +308,6 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
               <span>ICMP Ping Console</span>
             </button>
           </div>
-
-          <span className="text-xs font-mono text-[#706b63]">
-            {activeTab === 'browser' ? 'Cisco Packet Tracer Web Client' : 'Layer 3 Echo Simulation'}
-          </span>
         </div>
 
         {activeTab === 'browser' && (
@@ -367,10 +328,6 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
                     </span>
                   </div>
                 </div>
-
-                <span className="text-[10px] font-mono text-[#706b63] hidden sm:inline">
-                  Cisco Web Browser Simulator v9.0
-                </span>
               </div>
 
               <div className="px-4 py-2 bg-[#faf8f4] border-b border-[#dfd8c8] flex flex-wrap items-center gap-2.5">
@@ -399,13 +356,13 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
                   </button>
                 </div>
 
-                <div className="flex items-center space-x-1.5 bg-[#eae4d8] px-2.5 py-1 rounded-lg border border-[#d8d0bf] text-xs font-mono shrink-0">
-                  <Laptop className="w-3.5 h-3.5 text-[#554f45]" />
-                  <span className="text-[#554f45] font-semibold">Client:</span>
+                <div className="relative flex items-center bg-[#eae4d8] pl-2.5 pr-8 py-1 rounded-lg border border-[#d8d0bf] text-xs font-mono shrink-0">
+                  <Laptop className="w-3.5 h-3.5 text-[#554f45] mr-1.5 shrink-0" />
+                  <span className="text-[#554f45] font-semibold mr-1 shrink-0">Client:</span>
                   <select
                     value={browserDevice}
                     onChange={(e) => setBrowserDevice(e.target.value)}
-                    className="bg-transparent text-[#1e1c19] font-mono focus:outline-none cursor-pointer"
+                    className="appearance-none bg-transparent text-[#1e1c19] font-mono font-medium focus:outline-none cursor-pointer pr-1"
                   >
                     {hostDevices.map((d) => (
                       <option key={d.name} value={d.name}>
@@ -414,6 +371,7 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
                     ))}
                     <option value="Admin-Portal-Server">Admin-Portal-Server</option>
                   </select>
+                  <ChevronDown className="w-3.5 h-3.5 text-[#706b63] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
 
                 <div className="flex-1 min-w-[240px] flex items-center bg-white px-3 py-1 rounded-lg border border-[#dfd8c8] shadow-2xs">
@@ -502,9 +460,6 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
                   <div className="text-center text-xs font-mono text-[#8c8477] py-16 space-y-2">
                     <Globe className="w-8 h-8 mx-auto text-[#b0a898]" />
                     <p>Enter a campus URL above and click &apos;Go&apos; to load via Cisco Packet Tracer.</p>
-                    <p className="text-[11px] text-[#a09888]">
-                      Simulates DNS resolution through Campus-DNS-Server and HTTP delivery through departmental web servers.
-                    </p>
                   </div>
                 )}
               </div>
@@ -530,25 +485,30 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
           <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#554f45] mb-1 font-mono">
+                <label className="block text-xs font-semibold text-[#554f45] mb-1.5 font-mono">
                   Source Device in Packet Tracer
                 </label>
-                <select
-                  value={sourceDevice}
-                  onChange={(e) => setSourceDevice(e.target.value)}
-                  className="w-full bg-[#faf8f4] border border-[#dfd8c8] rounded-xl px-3 py-2 text-sm text-[#1e1c19] font-mono focus:outline-none focus:border-[#1e1c19]"
-                >
-                  {hostDevices.map((d) => (
-                    <option key={d.name} value={d.name}>
-                      {d.name} ({d.model})
-                    </option>
-                  ))}
-                  <option value="Admin-Portal-Server">Admin-Portal-Server (VLAN 30)</option>
-                </select>
+                <div className="relative w-full">
+                  <select
+                    value={sourceDevice}
+                    onChange={(e) => setSourceDevice(e.target.value)}
+                    className="w-full appearance-none bg-[#faf8f4] border border-[#dfd8c8] rounded-xl pl-3.5 pr-10 py-2 text-sm text-[#1e1c19] font-mono focus:outline-none focus:border-[#1e1c19] cursor-pointer"
+                  >
+                    {hostDevices.map((d) => (
+                      <option key={d.name} value={d.name}>
+                        {d.name} ({d.model})
+                      </option>
+                    ))}
+                    <option value="Admin-Portal-Server">Admin-Portal-Server (VLAN 30)</option>
+                  </select>
+                  <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[#706b63]">
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
+                </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#554f45] mb-1 font-mono">
+                <label className="block text-xs font-semibold text-[#554f45] mb-1.5 font-mono">
                   Target IPv4 Destination
                 </label>
                 <div className="flex space-x-2">
@@ -626,9 +586,7 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
               </div>
 
               <div className="flex-1 bg-[#1a1815] p-4 rounded-xl border border-[#332e28] text-emerald-400 overflow-y-auto whitespace-pre font-mono text-xs min-h-[200px]">
-                {pingResult
-                  ? pingResult.output
-                  : `Ready to execute. Select a host and click 'Transmit Ping Packets'.\nThe command prompt inside Packet Tracer will run: ping <target_ip>`}
+                {pingResult ? pingResult.output : 'Ready. Click \'Transmit Ping Packets\' to test ICMP reachability.'}
               </div>
             </div>
           </div>
@@ -644,7 +602,7 @@ export const SecurityCenter = ({ devices, aclRules, onRefresh }) => {
             </h3>
           </div>
           <span className="text-xs text-[#706b63] font-mono">
-            Enforced at Campus-Core-Router G0/0 (CAMPUS-FIREWALL)
+            Campus-Core-Router G0/0
           </span>
         </div>
         <div className="overflow-x-auto">
