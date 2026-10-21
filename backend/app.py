@@ -261,19 +261,114 @@ def get_topology():
         devices = pt.list_devices()
         links = pt.list_links()
 
-        cs_pc_count = 0
-        lib_pc_count = 0
-        admin_pc_count = 0
-        dc_pc_count = 0
+        dept_devices = {
+            "dept-cs": [],
+            "dept-lib": [],
+            "dept-admin": [],
+            "dept-dc": [],
+        }
+
+        non_pcs = []
+        for d in devices:
+            kind = d.get("kind", "device")
+            name = d.get("name", "")
+            if kind == "power_distribution_device":
+                continue
+
+            if kind in ("pc", "host") or d.get("model") == "PC-PT":
+                if "CS" in name or name.startswith("CS-") or name == "PC2":
+                    dept_devices["dept-cs"].append(d)
+                elif "LIB" in name or name.startswith("LIB-"):
+                    dept_devices["dept-lib"].append(d)
+                elif "ADMIN" in name or name.startswith("ADMIN-"):
+                    dept_devices["dept-admin"].append(d)
+                else:
+                    dept_devices["dept-cs"].append(d)
+            elif kind == "server" or d.get("model") == "Server-PT":
+                dept_devices["dept-dc"].append(d)
+            else:
+                non_pcs.append(d)
+
+        height_cs = max(260, 160 + ((len(dept_devices["dept-cs"]) + 1) // 2) * 80)
+        height_lib = max(260, 160 + ((len(dept_devices["dept-lib"]) + 1) // 2) * 80)
+        height_admin = max(260, 160 + ((len(dept_devices["dept-admin"]) + 1) // 2) * 80)
+        height_dc = max(260, 160 + ((len(dept_devices["dept-dc"]) + 1) // 2) * 80)
+
+        cs_block_y = 80
+        lib_block_y = cs_block_y + height_cs + 40
+
+        admin_block_y = 80
+        dc_block_y = admin_block_y + height_admin + 40
+
+        buildings = [
+            {
+                "id": "block-cs",
+                "name": "Academic Block A - Computer Science",
+                "departmentId": "dept-cs",
+                "vlan": 10,
+                "subnet": "192.168.10.0/24",
+                "color": "#3b82f6",
+                "x": 50,
+                "y": cs_block_y,
+                "width": 360,
+                "height": height_cs,
+            },
+            {
+                "id": "block-lib",
+                "name": "Academic Block B - Central Library",
+                "departmentId": "dept-lib",
+                "vlan": 20,
+                "subnet": "192.168.20.0/24",
+                "color": "#10b981",
+                "x": 50,
+                "y": lib_block_y,
+                "width": 360,
+                "height": height_lib,
+            },
+            {
+                "id": "block-admin",
+                "name": "Academic Block C - Administration",
+                "departmentId": "dept-admin",
+                "vlan": 30,
+                "subnet": "192.168.30.0/24",
+                "color": "#f59e0b",
+                "x": 930,
+                "y": admin_block_y,
+                "width": 360,
+                "height": height_admin,
+            },
+            {
+                "id": "block-dc",
+                "name": "Campus Data Center - Server Facility",
+                "departmentId": "dept-dc",
+                "vlan": 100,
+                "subnet": "192.168.100.0/24",
+                "color": "#8b5cf6",
+                "x": 930,
+                "y": dc_block_y,
+                "width": 360,
+                "height": height_dc,
+            },
+            {
+                "id": "block-core",
+                "name": "Campus Core Distribution Hub",
+                "departmentId": "core",
+                "vlan": 1,
+                "subnet": "802.1Q Backbone",
+                "color": "#6366f1",
+                "x": 460,
+                "y": 80,
+                "width": 420,
+                "height": 320,
+            },
+        ]
 
         nodes = []
-        for d in devices:
+
+        for d in non_pcs:
             kind = d.get("kind", "device")
             model = d.get("model", "")
             name = d.get("name", "")
-
-            if kind == "power_distribution_device":
-                continue
 
             dept_id = None
             if "CS" in name:
@@ -294,56 +389,37 @@ def get_topology():
                 flow_type = "serverNode"
 
             if name == "Campus-Core-Router":
-                pos = {"x": 560, "y": 140}
+                pos = {"x": 640, "y": 140}
             elif name == "Core-Dist-SW":
-                pos = {"x": 560, "y": 280}
+                pos = {"x": 640, "y": 270}
             elif name == "SW-CS":
-                pos = {"x": 150, "y": 140}
+                pos = {"x": 200, "y": cs_block_y + 60}
             elif name == "SW-LIB":
-                pos = {"x": 150, "y": 560}
+                pos = {"x": 200, "y": lib_block_y + 60}
             elif name == "SW-ADMIN":
-                pos = {"x": 970, "y": 140}
+                pos = {"x": 1080, "y": admin_block_y + 60}
             elif name == "SW-SERVERS":
-                pos = {"x": 970, "y": 560}
-            elif name == "Campus-DNS-Server":
-                pos = {"x": 970, "y": 700}
-            elif dept_id == "dept-cs":
-                pos = {"x": 80 + (cs_pc_count % 2) * 140, "y": 280 + (cs_pc_count // 2) * 90}
-                cs_pc_count += 1
-            elif dept_id == "dept-lib":
-                pos = {"x": 80 + (lib_pc_count % 2) * 140, "y": 700 + (lib_pc_count // 2) * 90}
-                lib_pc_count += 1
-            elif dept_id == "dept-admin":
-                pos = {"x": 900 + (admin_pc_count % 2) * 140, "y": 280 + (admin_pc_count // 2) * 90}
-                admin_pc_count += 1
-            elif dept_id == "dept-dc":
-                pos = {"x": 900 + (dc_pc_count % 2) * 140, "y": 700 + (dc_pc_count // 2) * 90}
-                dc_pc_count += 1
+                pos = {"x": 1080, "y": dc_block_y + 60}
             else:
                 pos = {"x": d.get("x", 400.0) - 200, "y": d.get("y", 300.0) - 100}
 
             dept = DEPARTMENTS.get(dept_id)
-            if name == "Campus-DNS-Server":
-                ip_addr = "192.168.100.10"
-                ip_mode = "Static"
-            elif name == "Campus-Core-Router":
+            if name == "Campus-Core-Router":
                 ip_addr = "192.168.10.1 / 20.1 / 30.1 / 100.1"
                 ip_mode = "Layer 3 SVI Gateway"
             elif kind == "switch":
                 ip_addr = "Layer 2 Transparent"
                 ip_mode = "802.1Q Trunk / Access"
-            elif dept:
-                ip_addr = f"192.168.{dept['vlan']}.5{max(1, cs_pc_count)}"
-                ip_mode = "DHCP Dynamic Pool"
             else:
                 ip_addr = "192.168.x.x"
-                ip_mode = "DHCP"
+                ip_mode = "Infrastructure"
 
             nodes.append(
                 {
                     "id": name,
                     "type": flow_type,
                     "position": pos,
+                    "draggable": False,
                     "data": {
                         "label": name,
                         "kind": kind,
@@ -360,6 +436,54 @@ def get_topology():
                     },
                 }
             )
+
+        dept_layout_info = {
+            "dept-cs": (50, cs_block_y, DEPARTMENTS["dept-cs"]),
+            "dept-lib": (50, lib_block_y, DEPARTMENTS["dept-lib"]),
+            "dept-admin": (930, admin_block_y, DEPARTMENTS["dept-admin"]),
+            "dept-dc": (930, dc_block_y, DEPARTMENTS["dept-dc"]),
+        }
+
+        for dept_id, d_list in dept_devices.items():
+            base_x, base_y, dept = dept_layout_info[dept_id]
+            for idx, d in enumerate(d_list):
+                name = d.get("name", "")
+                kind = d.get("kind", "host")
+                model = d.get("model", "PC-PT")
+                flow_type = "serverNode" if kind == "server" or model == "Server-PT" else "hostNode"
+
+                pos_x = base_x + 60 + (idx % 2) * 160
+                pos_y = base_y + 160 + (idx // 2) * 80
+
+                if name == "Campus-DNS-Server":
+                    ip_addr = "192.168.100.10"
+                    ip_mode = "Static"
+                else:
+                    ip_addr = f"192.168.{dept['vlan']}.5{idx + 1}"
+                    ip_mode = "DHCP Dynamic Pool"
+
+                nodes.append(
+                    {
+                        "id": name,
+                        "type": flow_type,
+                        "position": {"x": pos_x, "y": pos_y},
+                        "draggable": False,
+                        "data": {
+                            "label": name,
+                            "kind": kind,
+                            "model": model,
+                            "department": dept_id,
+                            "departmentName": dept["name"],
+                            "block": dept["block"],
+                            "ip": ip_addr,
+                            "ipMode": ip_mode,
+                            "vlan": dept["vlan"],
+                            "gateway": dept["gateway"],
+                            "subnet": dept["subnet"],
+                            "status": "online",
+                        },
+                    }
+                )
 
         edges = []
         for idx, link in enumerate(links):
@@ -379,14 +503,10 @@ def get_topology():
             edge_style = (
                 {"stroke": "#ef4444", "strokeWidth": 3, "strokeDasharray": "6,6"}
                 if is_cut
-                else {"stroke": "#64748b", "strokeWidth": 2}
+                else {"stroke": "#827666", "strokeWidth": 2}
             )
 
-            label_text = (
-                f"{port_a} <-> {port_b} [SEVERED]"
-                if is_cut
-                else f"{port_a} <-> {port_b}"
-            )
+            label_text = "[LINK SEVERED]" if is_cut else None
 
             edges.append(
                 {
@@ -397,6 +517,8 @@ def get_topology():
                     "animated": not is_cut,
                     "isCut": is_cut,
                     "departmentId": link_dept,
+                    "portA": port_a,
+                    "portB": port_b,
                     "style": edge_style,
                 }
             )
@@ -405,13 +527,13 @@ def get_topology():
             {
                 "nodes": nodes,
                 "edges": edges,
-                "buildings": BUILDINGS,
+                "buildings": buildings,
                 "cutDepartments": list(CUT_DEPARTMENTS),
             }
         )
     except Exception as e:
         logger.error(f"Topology error: {e}")
-        return jsonify({"nodes": [], "edges": [], "buildings": BUILDINGS, "error": str(e)}), 500
+        return jsonify({"nodes": [], "edges": [], "buildings": [], "error": str(e)}), 500
 
 
 @app.route("/api/topology/link/toggle", methods=["POST"])

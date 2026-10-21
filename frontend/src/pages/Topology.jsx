@@ -1,9 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   ReactFlow,
   Controls,
   Background,
-  MiniMap,
   useNodesState,
   useEdgesState,
   Handle,
@@ -23,8 +22,9 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
-  Radio,
-  Network,
+  Plus,
+  Trash2,
+  Play,
   ShieldAlert,
 } from 'lucide-react';
 import { api } from '../services/api';
@@ -34,13 +34,13 @@ const BuildingNode = ({ data }) => {
   return (
     <div
       style={{
-        width: data.width || 380,
-        height: data.height || 400,
+        width: data.width || 360,
+        height: data.height || 260,
         borderColor: isCut ? '#ef4444' : '#dfd8c8',
-        backgroundColor: isCut ? 'rgba(254, 242, 242, 0.7)' : 'rgba(255, 255, 255, 0.45)',
+        backgroundColor: isCut ? 'rgba(254, 242, 242, 0.75)' : 'rgba(255, 255, 255, 0.5)',
       }}
       className={`rounded-2xl border-2 border-dashed transition-all duration-300 pointer-events-auto p-4 flex flex-col justify-between ${
-        isCut ? 'shadow-lg shadow-rose-100 ring-2 ring-rose-400/30' : 'shadow-sm'
+        isCut ? 'shadow-md shadow-rose-100 ring-2 ring-rose-300' : 'shadow-sm'
       }`}
     >
       <div className="flex items-center justify-between pb-2 border-b border-[#dfd8c8]/80">
@@ -53,7 +53,7 @@ const BuildingNode = ({ data }) => {
             <h4 className="text-xs font-bold text-[#1e1c19] tracking-tight">
               {data.name}
             </h4>
-            <div className="flex items-center space-x-2 mt-0.5">
+            <div className="flex items-center space-x-1.5 mt-0.5">
               <span className="text-[10px] font-mono text-[#706b63]">
                 {data.subnet}
               </span>
@@ -65,45 +65,51 @@ const BuildingNode = ({ data }) => {
         </div>
 
         {data.departmentId !== 'core' && (
-          <button
-            onClick={() => data.onToggleLink(data.departmentId)}
-            className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
-              isCut
-                ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-600 shadow-sm'
-                : 'bg-white hover:bg-rose-50 text-[#706b63] hover:text-rose-600 border-[#dfd8c8] hover:border-rose-300'
-            }`}
-          >
-            {isCut ? (
-              <>
-                <Wrench className="w-3.5 h-3.5" />
-                <span>Repair Uplink</span>
-              </>
-            ) : (
-              <>
-                <Scissors className="w-3.5 h-3.5" />
-                <span>Cut Uplink</span>
-              </>
-            )}
-          </button>
+          <div className="flex items-center space-x-1.5">
+            <button
+              onClick={() => data.onOpenAddModal(data.departmentId)}
+              className="flex items-center space-x-1 px-2 py-1 rounded bg-white hover:bg-sky-50 text-sky-700 hover:text-sky-800 border border-[#dfd8c8] hover:border-sky-300 text-[11px] font-semibold shadow-xs transition"
+              title="Add Workstation"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add PC</span>
+            </button>
+
+            <button
+              onClick={() => data.onToggleLink(data.departmentId)}
+              className={`flex items-center space-x-1 px-2 py-1 rounded text-[11px] font-semibold border transition ${
+                isCut
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-600 shadow-xs'
+                  : 'bg-white hover:bg-rose-50 text-[#706b63] hover:text-rose-600 border-[#dfd8c8] hover:border-rose-300'
+              }`}
+            >
+              {isCut ? (
+                <>
+                  <Wrench className="w-3 h-3" />
+                  <span>Repair</span>
+                </>
+              ) : (
+                <>
+                  <Scissors className="w-3 h-3" />
+                  <span>Cut</span>
+                </>
+              )}
+            </button>
+          </div>
         )}
       </div>
 
       <div className="flex-1 pointer-events-none" />
 
-      <div className="pt-2 border-t border-[#dfd8c8]/80 flex items-center justify-between text-[10px] text-[#706b63]">
-        <span className="font-mono">Broadcast Domain</span>
-        {isCut ? (
-          <span className="text-rose-600 font-bold flex items-center space-x-1">
+      {isCut && (
+        <div className="pt-2 border-t border-rose-200 flex items-center justify-between text-[10px] text-rose-600 font-bold">
+          <span className="flex items-center space-x-1">
             <AlertTriangle className="w-3 h-3" />
             <span>LINK SEVERED (OUTAGE)</span>
           </span>
-        ) : (
-          <span className="text-emerald-700 font-semibold flex items-center space-x-1">
-            <CheckCircle2 className="w-3 h-3" />
-            <span>Uplink Active (STP FWD)</span>
-          </span>
-        )}
-      </div>
+          <span>Packets Dropped</span>
+        </div>
+      )}
     </div>
   );
 };
@@ -112,10 +118,10 @@ const RouterNode = ({ data, selected }) => (
   <div className="flex flex-col items-center group cursor-pointer">
     <Handle type="target" position={Position.Top} className="!bg-indigo-600 !w-2 !h-2" />
     <div
-      className={`relative w-14 h-14 rounded-full bg-white border-2 flex items-center justify-center transition-all duration-200 shadow-md ${
+      className={`relative w-14 h-14 rounded-full bg-white border-2 flex items-center justify-center transition-all duration-200 shadow-sm ${
         selected
-          ? 'border-indigo-600 ring-4 ring-indigo-500/20 shadow-lg scale-105'
-          : 'border-indigo-500 hover:border-indigo-600 hover:shadow-lg'
+          ? 'border-indigo-600 ring-4 ring-indigo-500/20 shadow-md scale-105'
+          : 'border-indigo-500 hover:border-indigo-600 hover:shadow-md'
       }`}
     >
       <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
@@ -140,10 +146,10 @@ const SwitchNode = ({ data, selected }) => (
   <div className="flex flex-col items-center group cursor-pointer">
     <Handle type="target" position={Position.Top} className="!bg-sky-600 !w-2 !h-2" />
     <div
-      className={`relative w-16 h-11 rounded-lg bg-white border-2 flex items-center justify-between px-2 transition-all duration-200 shadow-md ${
+      className={`relative w-16 h-11 rounded-lg bg-white border-2 flex items-center justify-between px-2 transition-all duration-200 shadow-sm ${
         selected
-          ? 'border-sky-600 ring-4 ring-sky-500/20 shadow-lg scale-105'
-          : 'border-sky-500 hover:border-sky-600 hover:shadow-lg'
+          ? 'border-sky-600 ring-4 ring-sky-500/20 shadow-md scale-105'
+          : 'border-sky-500 hover:border-sky-600 hover:shadow-md'
       }`}
     >
       <div className="flex items-center space-x-1 text-sky-600">
@@ -179,10 +185,10 @@ const HostNode = ({ data, selected }) => (
   <div className="flex flex-col items-center group cursor-pointer">
     <Handle type="target" position={Position.Top} className="!bg-emerald-600 !w-2 !h-2" />
     <div
-      className={`relative w-12 h-12 rounded-xl bg-white border-2 flex items-center justify-center transition-all duration-200 shadow-md ${
+      className={`relative w-12 h-12 rounded-xl bg-white border-2 flex items-center justify-center transition-all duration-200 shadow-sm ${
         selected
-          ? 'border-emerald-600 ring-4 ring-emerald-500/20 shadow-lg scale-105'
-          : 'border-emerald-500 hover:border-emerald-600 hover:shadow-lg'
+          ? 'border-emerald-600 ring-4 ring-emerald-500/20 shadow-md scale-105'
+          : 'border-emerald-500 hover:border-emerald-600 hover:shadow-md'
       }`}
     >
       <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
@@ -207,10 +213,10 @@ const ServerNode = ({ data, selected }) => (
   <div className="flex flex-col items-center group cursor-pointer">
     <Handle type="target" position={Position.Top} className="!bg-amber-600 !w-2 !h-2" />
     <div
-      className={`relative w-12 h-14 rounded-xl bg-white border-2 flex flex-col items-center justify-center transition-all duration-200 shadow-md ${
+      className={`relative w-12 h-14 rounded-xl bg-white border-2 flex flex-col items-center justify-center transition-all duration-200 shadow-sm ${
         selected
-          ? 'border-amber-600 ring-4 ring-amber-500/20 shadow-lg scale-105'
-          : 'border-amber-500 hover:border-amber-600 hover:shadow-lg'
+          ? 'border-amber-600 ring-4 ring-amber-500/20 shadow-md scale-105'
+          : 'border-amber-500 hover:border-amber-600 hover:shadow-md'
       }`}
     >
       <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 mb-0.5">
@@ -253,6 +259,23 @@ export const Topology = () => {
   const [routesLoading, setRoutesLoading] = useState(false);
   const [bannerAlert, setBannerAlert] = useState(null);
 
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [targetDeptId, setTargetDeptId] = useState('dept-cs');
+  const [newDeviceName, setNewDeviceName] = useState('');
+  const [addingDevice, setAddingDevice] = useState(false);
+
+  const [pingRunning, setPingRunning] = useState(false);
+  const [pingResult, setPingResult] = useState(null);
+
+  const [deletingDevice, setDeletingDevice] = useState(false);
+
+  const handleOpenAddModal = (deptId) => {
+    setTargetDeptId(deptId);
+    const prefix = deptId === 'dept-cs' ? 'CS-PC' : deptId === 'dept-lib' ? 'LIB-PC' : 'ADMIN-PC';
+    setNewDeviceName(`${prefix}-0${Math.floor(Math.random() * 80) + 10}`);
+    setAddModalOpen(true);
+  };
+
   const loadTopology = useCallback(async () => {
     setLoading(true);
     try {
@@ -271,20 +294,17 @@ export const Topology = () => {
           ...b,
           isCut: cutList.includes(b.departmentId),
           onToggleLink: handleToggleLink,
+          onOpenAddModal: handleOpenAddModal,
         },
       }));
 
-      const deviceNodes = data.nodes || [];
-      setNodes([...buildingNodes, ...deviceNodes]);
-
-      const formattedEdges = (data.edges || []).map((e) => ({
-        ...e,
-        style: e.isCut
-          ? { stroke: '#ef4444', strokeWidth: 3, strokeDasharray: '6,6' }
-          : { stroke: '#827666', strokeWidth: 2 },
+      const deviceNodes = (data.nodes || []).map((n) => ({
+        ...n,
+        draggable: false,
       }));
 
-      setEdges(formattedEdges);
+      setNodes([...buildingNodes, ...deviceNodes]);
+      setEdges(data.edges || []);
     } catch (e) {
       console.error('Failed to load topology', e);
     } finally {
@@ -329,6 +349,63 @@ export const Topology = () => {
     }
   };
 
+  const handleCreateDevice = async (e) => {
+    e.preventDefault();
+    if (!newDeviceName.trim()) return;
+
+    setAddingDevice(true);
+    try {
+      const res = await api.addDevice({
+        name: newDeviceName.trim(),
+        departmentId: targetDeptId,
+        allocationType: 'DHCP',
+      });
+      if (res.success) {
+        setAddModalOpen(false);
+        setNewDeviceName('');
+        await loadTopology();
+      } else {
+        alert(res.error || 'Failed to create device');
+      }
+    } catch (err) {
+      alert(`Error creating device: ${err.message}`);
+    } finally {
+      setAddingDevice(false);
+    }
+  };
+
+  const handleDeleteDevice = async (name) => {
+    if (!confirm(`Are you sure you want to remove '${name}' from Cisco Packet Tracer?`)) return;
+
+    setDeletingDevice(true);
+    try {
+      const res = await api.deleteDevice(name);
+      if (res.success) {
+        setSelectedNode(null);
+        await loadTopology();
+      } else {
+        alert(res.error || 'Failed to delete device');
+      }
+    } catch (err) {
+      alert(`Error deleting device: ${err.message}`);
+    } finally {
+      setDeletingDevice(false);
+    }
+  };
+
+  const handleQuickPing = async (sourceName) => {
+    setPingRunning(true);
+    setPingResult(null);
+    try {
+      const res = await api.simulatePing(sourceName, '192.168.100.10');
+      setPingResult(res);
+    } catch (err) {
+      setPingResult({ success: false, output: err.message });
+    } finally {
+      setPingRunning(false);
+    }
+  };
+
   useEffect(() => {
     loadTopology();
     loadRoutes();
@@ -337,12 +414,79 @@ export const Topology = () => {
   const onNodeClick = (_, node) => {
     if (node.type !== 'buildingNode') {
       setSelectedNode(node);
+      setPingResult(null);
     }
   };
 
+  const activePathEdges = useMemo(() => {
+    if (!selectedNode) return new Set();
+    const selId = selectedNode.id;
+    const paths = new Set();
+
+    edges.forEach((e) => {
+      if (e.source === selId || e.target === selId) {
+        paths.add(e.id);
+        const nextDev = e.source === selId ? e.target : e.source;
+        edges.forEach((e2) => {
+          if (
+            (e2.source === nextDev && e2.target === 'Core-Dist-SW') ||
+            (e2.target === nextDev && e2.source === 'Core-Dist-SW')
+          ) {
+            paths.add(e2.id);
+          }
+        });
+      }
+      if (
+        (e.source === 'Core-Dist-SW' && e.target === 'Campus-Core-Router') ||
+        (e.target === 'Core-Dist-SW' && e.source === 'Campus-Core-Router')
+      ) {
+        paths.add(e.id);
+      }
+    });
+
+    return paths;
+  }, [selectedNode, edges]);
+
+  const styledEdges = useMemo(() => {
+    return edges.map((e) => {
+      const isHighlighted = activePathEdges.has(e.id);
+      if (e.isCut) {
+        return {
+          ...e,
+          label: '[SEVERED]',
+          style: { stroke: '#ef4444', strokeWidth: 3, strokeDasharray: '6,6' },
+        };
+      }
+
+      if (selectedNode) {
+        if (isHighlighted) {
+          return {
+            ...e,
+            label: null,
+            style: { stroke: '#4f46e5', strokeWidth: 3.5 },
+            animated: true,
+          };
+        }
+        return {
+          ...e,
+          label: null,
+          style: { stroke: '#d6cfc4', strokeWidth: 1.5, opacity: 0.6 },
+          animated: false,
+        };
+      }
+
+      return {
+        ...e,
+        label: null,
+        style: { stroke: '#827666', strokeWidth: 2 },
+        animated: false,
+      };
+    });
+  }, [edges, selectedNode, activePathEdges]);
+
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col space-y-4">
-      <div className="flex items-center justify-between bg-[#f4f0e8] p-4 rounded-xl border border-[#dfd8c8] shadow-sm">
+      <div className="flex items-center justify-between bg-[#f4f0e8] p-4 rounded-xl border border-[#dfd8c8] shadow-xs">
         <div>
           <h2 className="text-lg font-bold text-[#1e1c19] flex items-center space-x-2">
             <span>Campus Network Topology</span>
@@ -357,7 +501,7 @@ export const Topology = () => {
             )}
           </h2>
           <p className="text-xs text-[#706b63]">
-            Interactive canvas displaying physical building zones and real-time packet-tracer topology.
+            Physical building zones and clean interconnects synchronized live with Cisco Packet Tracer.
           </p>
         </div>
 
@@ -367,7 +511,7 @@ export const Topology = () => {
               setRoutesDrawerOpen(true);
               loadRoutes();
             }}
-            className="flex items-center space-x-2 px-3.5 py-1.5 bg-white hover:bg-[#eae4d8] text-[#1e1c19] rounded-lg text-sm font-medium border border-[#dfd8c8] shadow-sm transition"
+            className="flex items-center space-x-2 px-3.5 py-1.5 bg-white hover:bg-[#eae4d8] text-[#1e1c19] rounded-lg text-sm font-medium border border-[#dfd8c8] shadow-xs transition"
           >
             <Table className="w-4 h-4 text-indigo-600" />
             <span>Routing Table</span>
@@ -379,7 +523,7 @@ export const Topology = () => {
           <button
             onClick={loadTopology}
             disabled={loading}
-            className="flex items-center space-x-2 px-3.5 py-1.5 bg-white hover:bg-[#eae4d8] text-[#1e1c19] rounded-lg text-sm font-medium border border-[#dfd8c8] shadow-sm transition"
+            className="flex items-center space-x-2 px-3.5 py-1.5 bg-white hover:bg-[#eae4d8] text-[#1e1c19] rounded-lg text-sm font-medium border border-[#dfd8c8] shadow-xs transition"
           >
             <RefreshCw className={`w-4 h-4 text-[#706b63] ${loading ? 'animate-spin' : ''}`} />
             <span>Reload</span>
@@ -389,7 +533,7 @@ export const Topology = () => {
 
       {bannerAlert && (
         <div
-          className={`p-3 rounded-xl border flex items-center justify-between text-xs transition-all shadow-sm ${
+          className={`p-3 rounded-xl border flex items-center justify-between text-xs transition-all shadow-xs ${
             bannerAlert.type === 'error'
               ? 'bg-rose-50 text-rose-800 border-rose-300'
               : 'bg-emerald-50 text-emerald-800 border-emerald-300'
@@ -408,7 +552,7 @@ export const Topology = () => {
             {bannerAlert.type === 'error' && (
               <button
                 onClick={() => handleToggleLink(bannerAlert.departmentId)}
-                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold transition flex items-center space-x-1 shadow-sm"
+                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold transition flex items-center space-x-1 shadow-xs"
               >
                 <Wrench className="w-3 h-3" />
                 <span>Repair Cable</span>
@@ -424,11 +568,11 @@ export const Topology = () => {
         </div>
       )}
 
-      <div className="flex-1 relative bg-[#f7f4ed] rounded-xl border border-[#dfd8c8] overflow-hidden shadow-sm flex">
+      <div className="flex-1 relative bg-[#f7f4ed] rounded-xl border border-[#dfd8c8] overflow-hidden shadow-xs flex">
         <div className="flex-1 relative">
           <ReactFlow
             nodes={nodes}
-            edges={edges}
+            edges={styledEdges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onNodeClick={onNodeClick}
@@ -437,17 +581,9 @@ export const Topology = () => {
             className="bg-[#f7f4ed]"
           >
             <Background color="#827666" gap={24} size={1.2} />
-            <Controls className="!bg-white !border-[#dfd8c8] !text-[#1e1c19] fill-[#1e1c19] !shadow-md" />
-            <MiniMap
-              className="!bg-[#f4f0e8] !border-[#dfd8c8] rounded-lg !shadow-md"
-              maskColor="rgba(247, 244, 237, 0.7)"
-              nodeColor={(node) => {
-                if (node.type === 'buildingNode') return 'transparent';
-                if (node.type === 'routerNode') return '#6366f1';
-                if (node.type === 'switchNode') return '#0284c7';
-                if (node.type === 'serverNode') return '#d97706';
-                return '#059669';
-              }}
+            <Controls
+              showInteractive={false}
+              className="!bg-white !border-[#dfd8c8] !text-[#1e1c19] fill-[#1e1c19] !shadow-sm"
             />
           </ReactFlow>
         </div>
@@ -458,7 +594,7 @@ export const Topology = () => {
               <div className="flex items-center justify-between pb-3 border-b border-[#dfd8c8]">
                 <div>
                   <span className="text-[10px] font-mono uppercase tracking-wider text-[#7a7266] font-semibold">
-                    NETWORK NODE INSPECTOR
+                    DEVICE INSPECTOR
                   </span>
                   <h3 className="text-xl font-bold text-[#1e1c19] tracking-tight mt-0.5">
                     {selectedNode.data?.label}
@@ -475,11 +611,11 @@ export const Topology = () => {
               <div className="mt-4 space-y-4 text-xs font-mono">
                 <div>
                   <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold mb-1">
-                    CLASSIFICATION
+                    HARDWARE SPECIFICATION
                   </div>
                   <div className="bg-white p-2.5 rounded-lg border border-[#dfd8c8] space-y-1">
                     <div className="flex justify-between">
-                      <span className="text-[#706b63]">Device Kind</span>
+                      <span className="text-[#706b63]">Device Role</span>
                       <span className="text-[#1e1c19] font-bold capitalize">
                         {selectedNode.data?.kind}
                       </span>
@@ -491,9 +627,9 @@ export const Topology = () => {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-[#706b63]">Campus Zone</span>
+                      <span className="text-[#706b63]">Academic Zone</span>
                       <span className="text-[#1e1c19]">
-                        {selectedNode.data?.block || 'Core Backbone'}
+                        {selectedNode.data?.block || 'Campus Core'}
                       </span>
                     </div>
                   </div>
@@ -501,7 +637,7 @@ export const Topology = () => {
 
                 <div>
                   <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold mb-1">
-                    IP & ROUTING PARAMETERS
+                    IPV4 CONFIGURATION
                   </div>
                   <div className="bg-white p-2.5 rounded-lg border border-[#dfd8c8] space-y-1.5">
                     <div className="flex justify-between items-center">
@@ -523,7 +659,7 @@ export const Topology = () => {
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-[#706b63]">VLAN Domain</span>
+                      <span className="text-[#706b63]">VLAN ID</span>
                       <span className="px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 text-[10px]">
                         VLAN {selectedNode.data?.vlan}
                       </span>
@@ -537,34 +673,57 @@ export const Topology = () => {
                   </div>
                 </div>
 
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold mb-1">
-                    LINK & OPERATIONAL STATE
-                  </div>
-                  <div className="bg-white p-2.5 rounded-lg border border-[#dfd8c8] space-y-1">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#706b63]">Packet Tracer Status</span>
-                      <span className="text-emerald-700 font-bold flex items-center space-x-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>ONLINE</span>
-                      </span>
+                {selectedNode.data?.kind === 'host' && (
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold mb-1">
+                      DIAGNOSTIC TEST
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#706b63]">Coordinates</span>
-                      <span className="text-[#706b63]">
-                        X:{Math.round(selectedNode.position?.x || 0)} Y:{Math.round(selectedNode.position?.y || 0)}
-                      </span>
+                    <div className="bg-white p-2.5 rounded-lg border border-[#dfd8c8] space-y-2">
+                      <button
+                        onClick={() => handleQuickPing(selectedNode.data?.label)}
+                        disabled={pingRunning}
+                        className="w-full py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded text-xs font-semibold flex items-center justify-center space-x-1.5 transition"
+                      >
+                        <Play className={`w-3.5 h-3.5 ${pingRunning ? 'animate-spin' : ''}`} />
+                        <span>{pingRunning ? 'Pinging DNS Server...' : 'Ping DNS Server (.100.10)'}</span>
+                      </button>
+
+                      {pingResult && (
+                        <div
+                          className={`p-2 rounded text-[11px] font-mono border ${
+                            pingResult.success
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                              : 'bg-rose-50 text-rose-800 border-rose-300'
+                          }`}
+                        >
+                          <span className="font-bold">
+                            {pingResult.success ? 'ICMP Success (0% Loss)' : 'Ping Failed (Dropped)'}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
-            <div className="pt-3 border-t border-[#dfd8c8] text-[11px] text-[#706b63] flex items-center justify-between">
-              <span>Managed by CampusNet</span>
+            <div className="pt-3 border-t border-[#dfd8c8] flex items-center justify-between">
+              {selectedNode.data?.kind === 'host' ? (
+                <button
+                  onClick={() => handleDeleteDevice(selectedNode.data?.label)}
+                  disabled={deletingDevice}
+                  className="flex items-center space-x-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded text-xs font-semibold border border-rose-200 transition"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>{deletingDevice ? 'Deleting...' : 'Delete PC'}</span>
+                </button>
+              ) : (
+                <span className="text-[11px] text-[#706b63] font-mono">Protected Device</span>
+              )}
+
               <button
                 onClick={() => setSelectedNode(null)}
-                className="px-3 py-1 bg-white hover:bg-[#eae4d8] border border-[#dfd8c8] text-[#1e1c19] rounded font-medium transition"
+                className="px-3 py-1.5 bg-white hover:bg-[#eae4d8] border border-[#dfd8c8] text-[#1e1c19] rounded text-xs font-medium transition"
               >
                 Close
               </button>
@@ -723,6 +882,72 @@ export const Topology = () => {
               >
                 Close
               </button>
+            </div>
+          </div>
+        )}
+
+        {addModalOpen && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+            <div className="bg-[#f4f0e8] border border-[#dfd8c8] rounded-xl p-6 w-full max-w-sm shadow-2xl">
+              <div className="flex items-center justify-between pb-3 border-b border-[#dfd8c8] mb-4">
+                <h3 className="font-bold text-[#1e1c19] text-base">
+                  Spawn Workstation PC
+                </h3>
+                <button
+                  onClick={() => setAddModalOpen(false)}
+                  className="text-[#706b63] hover:text-[#1e1c19]"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateDevice} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#1e1c19] mb-1 font-mono">
+                    Device Hostname
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newDeviceName}
+                    onChange={(e) => setNewDeviceName(e.target.value)}
+                    className="w-full bg-white border border-[#dfd8c8] rounded-lg px-3 py-2 text-sm text-[#1e1c19] font-mono focus:outline-none focus:border-indigo-600"
+                    placeholder="e.g. CS-PC-02"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#1e1c19] mb-1 font-mono">
+                    Department Zone
+                  </label>
+                  <input
+                    type="text"
+                    disabled
+                    value={targetDeptId.toUpperCase()}
+                    className="w-full bg-[#eae4d8] border border-[#dfd8c8] rounded-lg px-3 py-2 text-sm text-[#554f45] font-mono"
+                  />
+                  <p className="text-[11px] text-[#706b63] mt-1 font-mono">
+                    Auto-wires to department switch with DHCP IP lease.
+                  </p>
+                </div>
+
+                <div className="pt-2 flex items-center justify-end space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setAddModalOpen(false)}
+                    className="px-3 py-1.5 bg-white border border-[#dfd8c8] text-[#1e1c19] rounded-lg text-xs font-medium hover:bg-[#eae4d8]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={addingDevice}
+                    className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition shadow-xs"
+                  >
+                    {addingDevice ? 'Spawning in Packet Tracer...' : 'Spawn PC'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
