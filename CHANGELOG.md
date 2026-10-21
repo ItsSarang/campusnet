@@ -10,6 +10,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Controlled Communication & Policy Matrix (Visual Firewall):**
+  - Interactive 3x4 department access control matrix in SecurityCenter allowing instant packet policy toggling (ALLOW / DENY) between CS, Library, Admin, and Data Center servers.
+  - 1-Click Policy Enforcement compiling matrix state into Cisco IOS Extended Access-List commands (`CAMPUS-FIREWALL`) pushed live to `Campus-Core-Router` in Packet Tracer.
+  - Automated 1-click verification presets testing ICMP ping reachability and HTTP portal responses.
+- **Multi-Domain Campus Web Services & Internal Admin Server:**
+  - Deployed dedicated `Admin-Portal-Server` (`Server-PT`) at `192.168.30.20` in Academic Block C (VLAN 30) serving confidential university administrative records.
+  - Configured native DNS service on `Campus-DNS-Server` with `A` records for `student.mitwpu.edu`, `admin.mitwpu.edu`, and `library.mitwpu.edu`.
+  - Configured HTTP servers with rich HTML portals for student course registration and executive administration.
+- **Simulated Campus Web Browser:**
+  - Embedded browser client component in SecurityCenter allowing selection of client host, address entry, and quick bookmark navigation.
+  - Validates live Layer 7 HTTP 200 OK delivery vs Layer 3/4 firewall packet drops (`Destination Host Administratively Prohibited`).
+- **Cisco IOS Script Preview Modal:**
+  - Added dedicated syntax modal showing the exact compiled Cisco IOS Extended ACL configuration before and after router enforcement.
 - **Global ASAG Offwhite Color Palette & Design System:**
   - Standardized the entire web application on the warm offwhite aesthetic from the ASAG project.
   - Base canvas background set to `#f7f4ed`, card and panel surfaces to `#fdfcf9` and `#faf8f4`, with `#dfd8c8` borders and `#1e1c19` typography.

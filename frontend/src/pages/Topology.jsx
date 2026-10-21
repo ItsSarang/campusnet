@@ -297,7 +297,11 @@ const ServerNode = ({ data, selected }) => (
         {data.label}
       </div>
       <div className="text-[9px] font-mono text-amber-700 font-medium">
-        {data.label === 'Campus-DHCP-Server' ? '.100.20 DHCP' : '.100.10 DNS'}
+        {data.label === 'Campus-DHCP-Server'
+          ? '.100.20 DHCP'
+          : data.label === 'Admin-Portal-Server'
+          ? '.30.20 Web ERP'
+          : '.100.10 DNS'}
       </div>
     </div>
     <Handle

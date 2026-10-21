@@ -62,7 +62,10 @@ def count_devices_per_department():
                 else:
                     counts["dept-cs"] += 1
             elif kind == "server" or d.get("model") == "Server-PT":
-                counts["dept-dc"] += 1
+                if "ADMIN" in name or name.startswith("Admin-"):
+                    counts["dept-admin"] += 1
+                else:
+                    counts["dept-dc"] += 1
     except Exception:
         pass
     return counts
@@ -428,28 +431,113 @@ ROUTING_HISTORY = [
     }
 ]
 
-ACL_RULES = [
-    {
-        "id": "acl-1",
-        "number": 101,
-        "name": "Allow DNS Queries to Campus Server",
-        "action": "permit",
-        "protocol": "udp",
-        "source": "any",
-        "destination": "host 192.168.100.10 eq 53",
-        "enabled": True,
+COMMUNICATION_MATRIX = {
+    "dept-cs": {
+        "dept-cs": "local",
+        "dept-lib": "allow",
+        "dept-admin": "deny",
+        "dept-dc": "allow",
     },
-    {
-        "id": "acl-2",
-        "number": 102,
-        "name": "Block Admin Subnet from Student Devices",
-        "action": "deny",
-        "protocol": "ip",
-        "source": "192.168.10.0 0.0.0.255",
-        "destination": "192.168.30.0 0.0.0.255",
-        "enabled": False,
+    "dept-lib": {
+        "dept-cs": "allow",
+        "dept-lib": "local",
+        "dept-admin": "deny",
+        "dept-dc": "allow",
     },
-]
+    "dept-admin": {
+        "dept-cs": "allow",
+        "dept-lib": "allow",
+        "dept-admin": "local",
+        "dept-dc": "allow",
+    },
+}
+
+DEPARTMENT_SUBNETS = {
+    "dept-cs": "192.168.10.0 0.0.0.255",
+    "dept-lib": "192.168.20.0 0.0.0.255",
+    "dept-admin": "192.168.30.0 0.0.0.255",
+    "dept-dc": "192.168.100.0 0.0.0.255",
+}
+
+
+def compile_matrix_acl_script(matrix: dict):
+    lines = [
+        "enable",
+        "configure terminal",
+        "no ip access-list extended CAMPUS-FIREWALL",
+        "ip access-list extended CAMPUS-FIREWALL",
+        "remark Core Campus Department Firewall Matrix",
+        "permit udp any host 192.168.100.10 eq 53",
+        "permit udp any any eq bootps",
+        "permit udp any any eq bootpc",
+        "permit icmp any any echo-reply",
+    ]
+    compiled_rules = [
+        {
+            "id": "acl-dns",
+            "number": 10,
+            "name": "Permit Campus DNS Queries (UDP 53)",
+            "action": "permit",
+            "protocol": "udp",
+            "source": "any",
+            "destination": "192.168.100.10 eq 53",
+            "enabled": True,
+        },
+        {
+            "id": "acl-dhcp",
+            "number": 20,
+            "name": "Permit Dynamic DHCP Leases (UDP 67/68)",
+            "action": "permit",
+            "protocol": "udp",
+            "source": "any",
+            "destination": "any eq bootps",
+            "enabled": True,
+        },
+    ]
+    rule_num = 30
+    for src_k, row in matrix.items():
+        src_sub = DEPARTMENT_SUBNETS.get(src_k)
+        src_name = DEPARTMENTS[src_k]["code"]
+        for dst_k, verdict in row.items():
+            if verdict == "deny":
+                dst_sub = DEPARTMENT_SUBNETS.get(dst_k)
+                dst_name = DEPARTMENTS[dst_k]["code"]
+                lines.append(f"deny ip {src_sub} {dst_sub}")
+                compiled_rules.append(
+                    {
+                        "id": f"acl-{rule_num}",
+                        "number": rule_num,
+                        "name": f"Firewall Rule: Block {src_name} to {dst_name}",
+                        "action": "deny",
+                        "protocol": "ip",
+                        "source": src_sub,
+                        "destination": dst_sub,
+                        "enabled": True,
+                    }
+                )
+                rule_num += 10
+    lines.append("permit ip any any")
+    compiled_rules.append(
+        {
+            "id": f"acl-{rule_num}",
+            "number": rule_num,
+            "name": "Default Permit Remaining Campus Inter-VLAN Traffic",
+            "action": "permit",
+            "protocol": "ip",
+            "source": "any",
+            "destination": "any",
+            "enabled": True,
+        }
+    )
+    lines.append("exit")
+    lines.append("interface GigabitEthernet0/0")
+    lines.append("ip access-group CAMPUS-FIREWALL in")
+    lines.append("exit")
+    lines.append("end")
+    return "\n".join(lines), compiled_rules
+
+
+_, ACL_RULES = compile_matrix_acl_script(COMMUNICATION_MATRIX)
 
 
 def log_event(event_type: str, message: str):
@@ -644,7 +732,10 @@ def get_topology():
                 else:
                     dept_devices["dept-cs"].append(d)
             elif kind == "server" or d.get("model") == "Server-PT":
-                dept_devices["dept-dc"].append(d)
+                if "ADMIN" in name or name.startswith("Admin-"):
+                    dept_devices["dept-admin"].append(d)
+                else:
+                    dept_devices["dept-dc"].append(d)
             else:
                 non_pcs.append(d)
 
@@ -876,6 +967,11 @@ def get_topology():
                     pos_y = base_y + 245
                     ip_addr = "192.168.100.20"
                     ip_mode = "Static (DHCP Service: Active)"
+                elif name == "Admin-Portal-Server":
+                    pos_x = base_x + 80
+                    pos_y = base_y + 245
+                    ip_addr = "192.168.30.20"
+                    ip_mode = "Static (Admin Web ERP)"
                 else:
                     pos_x = base_x + 80 + (idx % 2) * 160
                     pos_y = base_y + 245 + (idx // 2) * 85
@@ -1030,27 +1126,32 @@ def get_topology():
             dept = DEPARTMENTS[dept_id]
             for host_idx, d in enumerate(d_list):
                 dev_name = d.get("name", "")
-                is_server = dev_name in ("Campus-DNS-Server", "Campus-DHCP-Server")
+                is_server = dev_name in ("Campus-DNS-Server", "Campus-DHCP-Server", "Admin-Portal-Server")
                 is_dhcp_server = dev_name == "Campus-DHCP-Server"
+                is_admin_server = dev_name == "Admin-Portal-Server"
                 host_edge_id = f"link-{dept['switch']}-{dev_name}"
                 is_host_cut = host_edge_id in CUT_EDGES
 
                 port_a = (
                     "FastEthernet0/2"
-                    if dev_name == "Campus-DNS-Server"
+                    if dev_name in ("Campus-DNS-Server", "Admin-Portal-Server")
                     else "FastEthernet0/3"
                     if is_dhcp_server
                     else f"FastEthernet0/{host_idx + 2}"
                 )
                 category_label = (
-                    "Campus Central DHCP Server Infrastructure Link"
+                    "Campus Administration Web ERP Infrastructure Link"
+                    if is_admin_server
+                    else "Campus Central DHCP Server Infrastructure Link"
                     if is_dhcp_server
                     else "Campus DNS & Web Server Infrastructure Link"
                     if is_server
                     else f"Workstation Access Patch Cord ({dev_name})"
                 )
                 impact_text = (
-                    "Severing takes central DHCP service offline. Automatic dynamic IP lease provisioning fails campus-wide."
+                    "Severing takes administrative intranet and payroll portal offline."
+                    if is_admin_server
+                    else "Severing takes central DHCP service offline. Automatic dynamic IP lease provisioning fails campus-wide."
                     if is_dhcp_server
                     else "Severing takes central DNS and intranet server offline network-wide."
                     if is_server
@@ -1367,6 +1468,104 @@ def simulate_ping():
 @app.route("/api/acl/rules", methods=["GET"])
 def get_acl_rules():
     return jsonify(ACL_RULES)
+
+
+@app.route("/api/acl/matrix", methods=["GET"])
+def get_acl_matrix():
+    global COMMUNICATION_MATRIX, ACL_RULES
+    _, compiled_rules = compile_matrix_acl_script(COMMUNICATION_MATRIX)
+    if not ACL_RULES or len(ACL_RULES) <= 2:
+        ACL_RULES = compiled_rules
+    return jsonify({
+        "matrix": COMMUNICATION_MATRIX,
+        "rules": ACL_RULES,
+    })
+
+
+@app.route("/api/acl/matrix", methods=["POST"])
+def update_acl_matrix():
+    global COMMUNICATION_MATRIX, ACL_RULES
+    data = request.json or {}
+    new_matrix = data.get("matrix")
+    if not new_matrix or not isinstance(new_matrix, dict):
+        return jsonify({"error": "Invalid matrix payload"}), 400
+
+    COMMUNICATION_MATRIX = new_matrix
+    script, compiled_rules = compile_matrix_acl_script(COMMUNICATION_MATRIX)
+    ACL_RULES = compiled_rules
+
+    output = ""
+    try:
+        output = pt.run_cli("Campus-Core-Router", script)
+        pt.call_tool("save_network", {})
+    except Exception as e:
+        logger.warning(f"Error pushing matrix to Packet Tracer: {e}")
+
+    deny_count = sum(
+        1 for row in COMMUNICATION_MATRIX.values() for v in row.values() if v == "deny"
+    )
+    log_event(
+        "FIREWALL",
+        f"Visual Firewall Matrix enforced: {deny_count} DENY policy rules pushed to Campus-Core-Router.",
+    )
+
+    return jsonify({
+        "success": True,
+        "matrix": COMMUNICATION_MATRIX,
+        "script": script,
+        "output": output,
+        "rules": ACL_RULES,
+    })
+
+
+@app.route("/api/web/browse", methods=["POST"])
+def browse_web_portal():
+    data = request.json or {}
+    device = data.get("device", "CS-PC-01")
+    url = data.get("url", "http://student.mitwpu.edu")
+
+    if not url.startswith("http://") and not url.startswith("https://"):
+        url = f"http://{url}"
+
+    try:
+        res = pt.call_tool(
+            "browse_web",
+            {"device": device, "url": url, "timeout_secs": 4},
+        )
+        html = res.get("html", "")
+        server_ip = res.get("server", "")
+        log_event(
+            "HTTP",
+            f"HTTP GET {url} from '{device}' -> 200 OK (Served by {server_ip})",
+        )
+        return jsonify(
+            {
+                "success": True,
+                "status": "200 OK",
+                "statusCode": 200,
+                "url": url,
+                "server": server_ip,
+                "html": html,
+                "text": res.get("text", ""),
+                "device": device,
+            }
+        )
+    except Exception as e:
+        log_event(
+            "HTTP",
+            f"HTTP GET {url} from '{device}' -> 403 Forbidden / Timed Out (Firewall Blocked)",
+        )
+        return jsonify(
+            {
+                "success": False,
+                "status": "403 Forbidden / Connection Timed Out",
+                "statusCode": 403,
+                "url": url,
+                "server": "Filtered by Campus Core Firewall",
+                "error": "Destination Host Administratively Prohibited: Request dropped by Campus-Core-Router Extended ACL (CAMPUS-FIREWALL).",
+                "device": device,
+            }
+        )
 
 
 @app.route("/api/acl/apply", methods=["POST"])

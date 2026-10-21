@@ -13,7 +13,25 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 
 ## Implemented Features
 
-### 1. Global ASAG Offwhite Design System:
+### 1. Controlled Communication & Visual Firewall Matrix:
+- Implemented the Campus Department Communication Matrix (Visual Firewall) in `frontend/src/pages/SecurityCenter.jsx`.
+- 3x4 grid covering CS Dept (VLAN 10), Library (VLAN 20), Admin Dept (VLAN 30), and Data Center Servers (VLAN 100).
+- Interactive ALLOW (emerald) and DENY (rose) policy toggles with LOCAL L2 intra-switch indicators.
+- 1-Click Policy Enforcement compiling visual matrix into Cisco IOS Extended ACL (`CAMPUS-FIREWALL`) and pushing to `Campus-Core-Router` live in Packet Tracer.
+- Real-time synchronization of active ACL table and simulation feed.
+
+### 2. Multi-Domain Web Portals & Dedicated Admin Server:
+- Deployed internal web server `Admin-Portal-Server` (`Server-PT`) at `192.168.30.20` in Academic Block C cabled to `SW-ADMIN` Fa0/2.
+- Configured native DNS records on `Campus-DNS-Server`: `student.mitwpu.edu`, `admin.mitwpu.edu`, and `library.mitwpu.edu`.
+- Configured HTTP services serving actual university intranet HTML pages for student services and confidential administrative records.
+
+### 3. Immediate Verification Suite (Ping Console + Campus Web Browser):
+- 1-Click Verification Presets automatically executing target tests with expected verdict badges.
+- Embedded Simulated Campus Web Browser testing live DNS name resolution and HTTP 200 OK rendering vs 403 Forbidden connection timeouts.
+- ICMP Ping Terminal displaying real Packet Tracer CLI stdout responses.
+- Cisco IOS Script Modal displaying exact synthesized extended access-list commands.
+
+### 4. Global ASAG Offwhite Design System:
 - Migrated the whole frontend palette to the warm offwhite aesthetic from the ASAG project.
 - Applied `#f7f4ed` page canvas background, `#fdfcf9` and `#faf8f4` card and panel surfaces, `#dfd8c8` border styling, and `#1e1c19` high-contrast typography.
 - Fully re-themed Dashboard metric widgets, VLSM capacity controls, progress bars, and simulation log.

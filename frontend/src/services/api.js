@@ -60,6 +60,29 @@ export const api = {
     return res.json();
   },
 
+  async getFirewallMatrix() {
+    const res = await fetch(`${API_BASE}/acl/matrix`);
+    return res.json();
+  },
+
+  async updateFirewallMatrix(matrix) {
+    const res = await fetch(`${API_BASE}/acl/matrix`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matrix }),
+    });
+    return res.json();
+  },
+
+  async browseWeb(device, url) {
+    const res = await fetch(`${API_BASE}/web/browse`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ device, url }),
+    });
+    return res.json();
+  },
+
   async applyAclRule(params) {
     const res = await fetch(`${API_BASE}/acl/apply`, {
       method: 'POST',
