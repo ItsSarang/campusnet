@@ -135,12 +135,42 @@ def compute_router_tables(cut_edges=None):
         cut_edges = set(cut_edges)
 
     router_names = [rc["name"] for rc in ROUTER_CONFIGS]
-    adj = {r: [] for r in router_names}
+    inf = 16
+
+    cost = {u: {v: inf for v in router_names} for u in router_names}
+    for u in router_names:
+        cost[u][u] = 0
     for u, v, edge_id in ROUTER_GRAPH_EDGES:
-        if edge_id in cut_edges:
-            continue
-        adj[u].append(v)
-        adj[v].append(u)
+        if edge_id not in cut_edges:
+            cost[u][v] = 1
+            cost[v][u] = 1
+
+    dist_vector = {u: {v: inf for v in router_names} for u in router_names}
+    next_hop = {u: {v: "None" for v in router_names} for u in router_names}
+
+    for u in router_names:
+        dist_vector[u][u] = 0
+        next_hop[u][u] = "Direct"
+        for v in router_names:
+            if u != v and cost[u][v] < inf:
+                dist_vector[u][v] = cost[u][v]
+                next_hop[u][v] = v
+
+    for _ in range(len(router_names) - 1):
+        updated = False
+        for u in router_names:
+            for v in router_names:
+                if u == v:
+                    continue
+                for nbr in router_names:
+                    if cost[u][nbr] < inf and dist_vector[nbr][v] < inf:
+                        new_cost = cost[u][nbr] + dist_vector[nbr][v]
+                        if new_cost < dist_vector[u][v]:
+                            dist_vector[u][v] = new_cost
+                            next_hop[u][v] = nbr
+                            updated = True
+        if not updated:
+            break
 
     result_tables = []
     for rc in ROUTER_CONFIGS:
@@ -148,46 +178,14 @@ def compute_router_tables(cut_edges=None):
         routes = []
         for dst_rc in ROUTER_CONFIGS:
             dst = dst_rc["name"]
-            if src == dst:
-                routes.append(
-                    {
-                        "destination": dst,
-                        "distance": 0,
-                        "nextHop": "Direct",
-                    }
-                )
-                continue
-
-            q = deque([[src]])
-            visited = {src}
-            found_path = None
-            while q:
-                path = q.popleft()
-                curr = path[-1]
-                if curr == dst:
-                    found_path = path
-                    break
-                for nxt in adj.get(curr, []):
-                    if nxt not in visited:
-                        visited.add(nxt)
-                        q.append(path + [nxt])
-
-            if found_path:
-                routes.append(
-                    {
-                        "destination": dst,
-                        "distance": len(found_path) - 1,
-                        "nextHop": found_path[1],
-                    }
-                )
-            else:
-                routes.append(
-                    {
-                        "destination": dst,
-                        "distance": "Unreachable",
-                        "nextHop": "None",
-                    }
-                )
+            d = dist_vector[src][dst]
+            routes.append(
+                {
+                    "destination": dst,
+                    "distance": d if d < inf else "Unreachable",
+                    "nextHop": next_hop[src][dst] if d < inf else "None",
+                }
+            )
 
         result_tables.append(
             {
@@ -197,6 +195,7 @@ def compute_router_tables(cut_edges=None):
                 "ip": rc["ip"],
                 "subnet": rc["subnet"],
                 "routes": routes,
+                "algorithm": "Bellman-Ford Distance Vector Routing",
             }
         )
 

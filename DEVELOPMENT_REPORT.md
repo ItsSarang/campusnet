@@ -13,12 +13,22 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 
 ## Implemented Features
 
-### 1. Packet Tracer Router Synchronization & Saved Backbone:
-- Instantiated all four Department Gateway Routers (`Router-CS`, `Router-LIB`, `Router-ADMIN`, `Router-DC` - Cisco 2911 model) into Cisco Packet Tracer 9.0 data plane.
-- Permanently committed and saved device configurations to `packet-tracer/campusnet_backbone.pkt`.
-- Routers now appear in both physical Cisco Packet Tracer workspace and web canvas.
+### 1. Packet Tracer Router Synchronization & Complete Physical Cabling:
+- Instantiated all four Department Gateway Routers (`Router-CS`, `Router-LIB`, `Router-ADMIN`, `Router-DC` - Cisco 2911 model) into Cisco Packet Tracer 9.0.
+- Completely rewired physical links: department switches to router Gi0/0, lateral failover links on Gi0/2, and distribution uplinks on Gi0/1.
+- Brought up all router interfaces with `no shutdown` and saved the entire live topology into `packet-tracer/campusnet_backbone.pkt`.
+- Aligned and positioned all devices logically on the Cisco Packet Tracer canvas.
 
-### 2. Three-Tier Reachability Engine (Failover vs. Block Offline):
+### 2. Bellman-Ford Distance Vector Routing Engine:
+- Replaced BFS with the exact Bellman-Ford Distance Vector Routing algorithm in `backend/app.py`.
+- Computes router distance vectors using link relaxation $D_u(v) = \min_w \{ c(u, w) + D_w(v) \}$ with infinity set to 16.
+- Generates dynamic 3-column forwarding state (`Destination Router`, `Distance`, `Next Hop`) rendered in the Routing Tables drawer.
+
+### 3. Streamlined Block Header & Unified Cable Inspector:
+- Removed redundant Cut Uplink buttons from building block headers.
+- All cable severance and restoration is unified through direct on-canvas cable selection and the side-panel Cable Inspector.
+
+### 4. Three-Tier Reachability Engine (Failover vs. Block Offline):
 - Replaced unconditional block red outline with full graph BFS reachability calculation to external gateway (`ISP-Edge-Router`).
 - If a direct core transit cable is severed but an alternate path exists via an adjacent router peer (`Router-CS <-> Router-LIB` or `Router-ADMIN <-> Router-DC`), the block border does not turn red; it turns amber (`#f59e0b`) with a `[FAILOVER ACTIVE (via NextHop)]` indicator.
 - If all egress paths or the internal default gateway trunk are severed, the block border turns red (`#ef4444`) with `[BLOCK OFFLINE (NO ROUTE TO OUTSIDE)]`.

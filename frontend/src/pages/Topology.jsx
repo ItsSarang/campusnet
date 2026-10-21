@@ -98,27 +98,6 @@ const BuildingNode = ({ data }) => {
               <Plus className="w-3.5 h-3.5" />
               <span>Add PC</span>
             </button>
-
-            <button
-              onClick={() => data.onToggleLink(data.departmentId)}
-              className={`flex items-center space-x-1 px-2.5 py-1 rounded text-[11px] font-semibold border transition ${
-                isCut
-                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-600 shadow-xs'
-                  : 'bg-white hover:bg-rose-50 text-[#706b63] hover:text-rose-600 border-[#dfd8c8] hover:border-rose-300'
-              }`}
-            >
-              {isCut ? (
-                <>
-                  <Wrench className="w-3 h-3" />
-                  <span>Repair Uplink</span>
-                </>
-              ) : (
-                <>
-                  <Scissors className="w-3 h-3" />
-                  <span>Cut Uplink</span>
-                </>
-              )}
-            </button>
           </div>
         )}
       </div>
@@ -1081,7 +1060,7 @@ export const Topology = () => {
                       Campus Routing Tables
                     </h3>
                     <p className="text-[11px] text-[#706b63] font-mono">
-                      Distance-Vector Forwarding State
+                      Bellman-Ford Distance Vector Algorithm
                     </p>
                   </div>
                 </div>
@@ -1166,7 +1145,7 @@ export const Topology = () => {
             </div>
 
             <div className="pt-3 border-t border-[#dfd8c8] text-[11px] text-[#706b63] flex justify-between items-center font-mono">
-              <span>Dynamic Routing Engine Active</span>
+              <span>Bellman-Ford DVR Engine Active</span>
               <button
                 onClick={() => setRoutesDrawerOpen(false)}
                 className="px-3 py-1 bg-white hover:bg-[#eae4d8] border border-[#dfd8c8] text-[#1e1c19] rounded text-xs transition"

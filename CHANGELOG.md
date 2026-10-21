@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Packet Tracer Router Hardware Synchronization:**
-  - Instantiated and saved all four departmental gateway routers (`Router-CS`, `Router-LIB`, `Router-ADMIN`, `Router-DC` - Cisco 2911 model) into Cisco Packet Tracer 9.0 and committed them directly into `packet-tracer/campusnet_backbone.pkt`.
-  - Department routers now exist synchronously across both the physical Packet Tracer simulation data plane and the interactive web topology canvas.
+- **Packet Tracer Complete Cable Rewiring & Alignment:**
+  - Physically connected all 4 department routers (`Router-CS`, `Router-LIB`, `Router-ADMIN`, `Router-DC`) in Cisco Packet Tracer 9.0 using straight and crossover cabling.
+  - Wired department switches (`SW-CS`, `SW-LIB`, `SW-ADMIN`, `SW-SERVERS`) to router GigabitEthernet0/0 ports.
+  - Wired lateral failover mesh links (`Router-CS <-> Router-LIB` and `Router-ADMIN <-> Router-DC`) on GigabitEthernet0/2 crossover ports.
+  - Wired core distribution uplinks from each router GigabitEthernet0/1 to `Core-Dist-SW`.
+  - Configured all router interfaces with `no shutdown` and cleanly repositioned all devices on the logical canvas.
+  - Saved live network state to `packet-tracer/campusnet_backbone.pkt`.
+- **Bellman-Ford Distance Vector Routing Algorithm:**
+  - Implemented exact Bellman-Ford Distance Vector Routing (RFC 1058 RIP semantics) in `backend/app.py`.
+  - Iterates relaxation $D_u(v) = \min_w \{ c(u, w) + D_w(v) \}$ with infinity threshold of 16 hops.
+  - Displays dynamic 3-column routing table (`Destination Router`, `Distance`, `Next Hop`) in the Topology Explorer drawer.
+- **Topology Canvas Streamlining:**
+  - Removed redundant Cut Uplink button from building block headers; cable cutting is now unified exclusively via interactive cable clicks and the Cable Inspector side panel.
 - **Three-Tier Failover vs Block Offline Reachability System:**
   - Implemented dynamic reachability engine evaluating full-graph BFS path connectivity from each department to external gateway (`ISP-Edge-Router`).
   - Blocks do not turn red when direct core transit links are cut if alternative lateral router routes remain viable (`Router-CS <-> Router-LIB` or `Router-ADMIN <-> Router-DC`).
