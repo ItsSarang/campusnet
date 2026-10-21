@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **3-Tab Navigation Architecture (Option A):**
+  - Streamlined application navigation to 3 core pages: Dashboard, Topology Explorer, and Security & Ping Center.
+  - Workstation provisioning, IP/subnet viewing, device de-provisioning, and link inspections are consolidated entirely into the spatial Topology canvas.
+- **Canvas Controls Streamlining:**
+  - Removed top card above the canvas containing redundant action buttons to maximize vertical screen space for the topology graph.
+  - Added dedicated resync icon button directly inside the canvas Controls group placed directly above the zoom `+` button.
 - **Packet Tracer Complete Cable Rewiring & Alignment:**
   - Physically connected all 4 department routers (`Router-CS`, `Router-LIB`, `Router-ADMIN`, `Router-DC`) in Cisco Packet Tracer 9.0 using straight and crossover cabling.
   - Wired department switches (`SW-CS`, `SW-LIB`, `SW-ADMIN`, `SW-SERVERS`) to router GigabitEthernet0/0 ports.

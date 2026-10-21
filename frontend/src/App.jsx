@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar } from './components/Navbar';
 import { Dashboard } from './pages/Dashboard';
 import { Topology } from './pages/Topology';
-import { IPManager } from './pages/IPManager';
 import { SecurityCenter } from './pages/SecurityCenter';
 import { api } from './services/api';
 
@@ -55,13 +54,6 @@ export function App() {
           />
         )}
         {currentTab === 'topology' && <Topology />}
-        {currentTab === 'ipmanager' && (
-          <IPManager
-            departments={departments}
-            devices={devices}
-            onRefresh={refreshAll}
-          />
-        )}
         {currentTab === 'security' && (
           <SecurityCenter
             devices={devices}

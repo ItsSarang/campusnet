@@ -38,10 +38,10 @@ export const Dashboard = ({
             <span>Sync with PT</span>
           </button>
           <button
-            onClick={() => onNavigate('ipmanager')}
+            onClick={() => onNavigate('topology')}
             className="flex items-center space-x-2 px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-sm font-medium shadow-lg shadow-sky-600/20 transition"
           >
-            <span>Add Workstation</span>
+            <span>Explore Topology</span>
             <ArrowUpRight className="w-4 h-4" />
           </button>
         </div>

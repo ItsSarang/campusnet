@@ -1,11 +1,10 @@
 import React from 'react';
-import { Network, Activity, Shield, Layers, Radio } from 'lucide-react';
+import { Network, Activity, Shield, Radio } from 'lucide-react';
 
 export const Navbar = ({ currentTab, onSelectTab, status }) => {
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: Activity },
     { id: 'topology', label: 'Topology Explorer', icon: Network },
-    { id: 'ipmanager', label: 'IP & Department Manager', icon: Layers },
     { id: 'security', label: 'Security & Ping Center', icon: Shield },
   ];
 

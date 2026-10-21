@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   ReactFlow,
   Controls,
+  ControlButton,
   Background,
   useNodesState,
   useEdgesState,
@@ -25,7 +26,6 @@ import {
   Plus,
   Trash2,
   Play,
-  ShieldAlert,
   Globe,
   Activity,
 } from 'lucide-react';
@@ -665,52 +665,7 @@ export const Topology = () => {
   }, [edges, selectedNode, selectedEdge, activePathEdges]);
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col space-y-4">
-      <div className="flex items-center justify-between bg-[#f4f0e8] p-4 rounded-xl border border-[#dfd8c8] shadow-xs">
-        <div>
-          <h2 className="text-lg font-bold text-[#1e1c19] flex items-center space-x-2">
-            <span>Enterprise Campus Network Interconnect</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-[#eae4d8] text-[#554f45] border border-[#dfd8c8] font-mono">
-              3-Tier Architecture
-            </span>
-            {cutEdges.length > 0 && (
-              <span className="px-2 py-0.5 text-xs font-bold bg-rose-100 text-rose-700 border border-rose-300 rounded-full flex items-center space-x-1 animate-pulse">
-                <ShieldAlert className="w-3.5 h-3.5" />
-                <span>{cutEdges.length} Cables Severed</span>
-              </span>
-            )}
-          </h2>
-          <p className="text-xs text-[#706b63]">
-            Multi-building topology, external ISP transit gateway, and Cisco Packet Tracer live synchronization.
-          </p>
-        </div>
-
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={() => {
-              setRoutesDrawerOpen(true);
-              loadRoutes();
-            }}
-            className="flex items-center space-x-2 px-3.5 py-1.5 bg-white hover:bg-[#eae4d8] text-[#1e1c19] rounded-lg text-sm font-medium border border-[#dfd8c8] shadow-xs transition"
-          >
-            <Table className="w-4 h-4 text-indigo-600" />
-            <span>Campus Routing Tables</span>
-            <span className="px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-800 text-xs font-semibold font-mono">
-              {(routesData.tables || []).length || 6} Routers
-            </span>
-          </button>
-
-          <button
-            onClick={loadTopology}
-            disabled={loading}
-            className="flex items-center space-x-2 px-3.5 py-1.5 bg-white hover:bg-[#eae4d8] text-[#1e1c19] rounded-lg text-sm font-medium border border-[#dfd8c8] shadow-xs transition"
-          >
-            <RefreshCw className={`w-4 h-4 text-[#706b63] ${loading ? 'animate-spin' : ''}`} />
-            <span>Reload</span>
-          </button>
-        </div>
-      </div>
-
+    <div className="h-[calc(100vh-8rem)] flex flex-col space-y-3">
       {bannerAlert && (
         <div
           className={`p-3 rounded-xl border flex items-center justify-between text-xs transition-all shadow-xs ${
@@ -761,7 +716,16 @@ export const Topology = () => {
             <Controls
               showInteractive={false}
               className="!bg-white !border-[#dfd8c8] !text-[#1e1c19] fill-[#1e1c19] !shadow-sm"
-            />
+            >
+              <ControlButton
+                onClick={loadTopology}
+                disabled={loading}
+                title="Resync with Packet Tracer"
+                className="!order-first !flex !items-center !justify-center hover:!bg-[#eae4d8]"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 text-[#1e1c19] ${loading ? 'animate-spin' : ''}`} />
+              </ControlButton>
+            </Controls>
           </ReactFlow>
         </div>
 

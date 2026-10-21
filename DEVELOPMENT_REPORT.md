@@ -13,7 +13,12 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 
 ## Implemented Features
 
-### 1. Packet Tracer Router Synchronization & Complete Physical Cabling:
+### 1. 3-Tab Architecture & Simplified Canvas Controls (Option A):
+- Consolidated application navigation into 3 core pages: Dashboard, Topology Explorer, and Security & Ping Center.
+- Removed redundant IP & Department Manager tab; workstation provisioning, de-provisioning, and IP inspections are unified in Topology Explorer.
+- Removed top header card above the topology canvas; placed a streamlined resync icon button directly inside the canvas Controls group above the zoom `+` button.
+
+### 2. Packet Tracer Router Synchronization & Complete Physical Cabling:
 - Instantiated all four Department Gateway Routers (`Router-CS`, `Router-LIB`, `Router-ADMIN`, `Router-DC` - Cisco 2911 model) into Cisco Packet Tracer 9.0.
 - Completely rewired physical links: department switches to router Gi0/0, lateral failover links on Gi0/2, and distribution uplinks on Gi0/1.
 - Brought up all router interfaces with `no shutdown` and saved the entire live topology into `packet-tracer/campusnet_backbone.pkt`.
