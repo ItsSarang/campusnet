@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Multi-Router Campus Interconnect & Distance-Vector Routing Tables:**
+  - Added dedicated Department Gateway Routers to each academic block (`Router-CS`, `Router-LIB`, `Router-ADMIN`, `Router-DC`) connecting downstream to department switches and upstream to `Campus-Core-Router`.
+  - Added lateral campus mesh links (`Router-CS <-> Router-LIB` and `Router-ADMIN <-> Router-DC`) for path redundancy and rerouting.
+  - Implemented dynamic shortest path routing computation generating clean 3-column distance-vector tables (`Destination Router`, `Distance`, `Next Hop`).
+  - Redesigned Routing Tables drawer to render each router's current active table sequentially with zero historical log clutter.
+  - Added dynamic active path highlighter (BFS) tracing packets from selected hosts through access switches, department routers, and campus core to the ISP edge.
 - **Option B Multi-Router WAN Edge & Internet Gateway Integration:**
   - Added `ISP-Edge-Router` (Cisco 2911) representing an external Internet Service Provider on public subnet `203.0.113.0/30`.
   - Configured `Loopback0` on `ISP-Edge-Router` representing simulated public internet destination `8.8.8.8` (Google Public DNS).

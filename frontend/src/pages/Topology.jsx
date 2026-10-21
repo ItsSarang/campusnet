@@ -300,7 +300,7 @@ export const Topology = () => {
   const [loading, setLoading] = useState(false);
   const [cutDepartments, setCutDepartments] = useState([]);
   const [routesDrawerOpen, setRoutesDrawerOpen] = useState(false);
-  const [routesData, setRoutesData] = useState({ routes: [], history: [], raw: '' });
+  const [routesData, setRoutesData] = useState({ tables: [], routes: [], history: [], raw: '' });
   const [routesLoading, setRoutesLoading] = useState(false);
   const [bannerAlert, setBannerAlert] = useState(null);
 
@@ -468,32 +468,41 @@ export const Topology = () => {
     const selId = selectedNode.id;
     const paths = new Set();
 
+    const adj = new Map();
     edges.forEach((e) => {
-      if (e.source === selId || e.target === selId) {
-        paths.add(e.id);
-        const nextDev = e.source === selId ? e.target : e.source;
-        edges.forEach((e2) => {
-          if (
-            (e2.source === nextDev && e2.target === 'Core-Dist-SW') ||
-            (e2.target === nextDev && e2.source === 'Core-Dist-SW')
-          ) {
-            paths.add(e2.id);
-          }
-        });
-      }
-      if (
-        (e.source === 'Core-Dist-SW' && e.target === 'Campus-Core-Router') ||
-        (e.target === 'Core-Dist-SW' && e.source === 'Campus-Core-Router')
-      ) {
-        paths.add(e.id);
-      }
-      if (
-        (e.source === 'Campus-Core-Router' && e.target === 'ISP-Edge-Router') ||
-        (e.target === 'Campus-Core-Router' && e.source === 'ISP-Edge-Router')
-      ) {
-        paths.add(e.id);
-      }
+      if (e.isCut) return;
+      if (!adj.has(e.source)) adj.set(e.source, []);
+      if (!adj.has(e.target)) adj.set(e.target, []);
+      adj.get(e.source).push({ next: e.target, edgeId: e.id });
+      adj.get(e.target).push({ next: e.source, edgeId: e.id });
     });
+
+    const queue = [[selId, []]];
+    const visited = new Set([selId]);
+    let targetEdgeIds = null;
+
+    while (queue.length > 0) {
+      const [curr, edgeIds] = queue.shift();
+      if (curr === 'ISP-Edge-Router') {
+        targetEdgeIds = edgeIds;
+        break;
+      }
+      const neighbors = adj.get(curr) || [];
+      for (const { next, edgeId } of neighbors) {
+        if (!visited.has(next)) {
+          visited.add(next);
+          queue.push([next, [...edgeIds, edgeId]]);
+        }
+      }
+    }
+
+    if (targetEdgeIds && targetEdgeIds.length > 0) {
+      targetEdgeIds.forEach((id) => paths.add(id));
+    } else {
+      edges.forEach((e) => {
+        if (e.source === selId || e.target === selId) paths.add(e.id);
+      });
+    }
 
     return paths;
   }, [selectedNode, edges]);
@@ -569,9 +578,9 @@ export const Topology = () => {
             className="flex items-center space-x-2 px-3.5 py-1.5 bg-white hover:bg-[#eae4d8] text-[#1e1c19] rounded-lg text-sm font-medium border border-[#dfd8c8] shadow-xs transition"
           >
             <Table className="w-4 h-4 text-indigo-600" />
-            <span>Inter-VLAN & WAN Routing Table</span>
+            <span>Campus Routing Tables</span>
             <span className="px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-800 text-xs font-semibold font-mono">
-              {routesData.routes.length}
+              {(routesData.tables || []).length || 6} Routers
             </span>
           </button>
 
@@ -768,6 +777,21 @@ export const Topology = () => {
                     </div>
                   </div>
                 )}
+
+                {selectedNode.data?.kind === 'router' && (
+                  <div className="pt-2">
+                    <button
+                      onClick={() => {
+                        setRoutesDrawerOpen(true);
+                        loadRoutes();
+                      }}
+                      className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold flex items-center justify-center space-x-1.5 transition shadow-xs"
+                    >
+                      <Table className="w-3.5 h-3.5" />
+                      <span>View Campus Routing Tables</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -796,17 +820,17 @@ export const Topology = () => {
         )}
 
         {routesDrawerOpen && (
-          <div className="absolute right-4 top-4 bottom-4 w-[480px] bg-[#f4f0e8] border border-[#dfd8c8] rounded-xl p-5 shadow-2xl z-20 flex flex-col justify-between">
+          <div className="absolute right-4 top-4 bottom-4 w-[520px] bg-[#f4f0e8] border border-[#dfd8c8] rounded-xl p-5 shadow-2xl z-20 flex flex-col justify-between">
             <div className="flex-1 flex flex-col overflow-hidden">
               <div className="flex items-center justify-between pb-3 border-b border-[#dfd8c8]">
                 <div className="flex items-center space-x-2">
                   <Table className="w-5 h-5 text-indigo-700" />
                   <div>
                     <h3 className="font-bold text-[#1e1c19] text-base">
-                      Campus Core & WAN Routing Table
+                      Campus Routing Tables
                     </h3>
                     <p className="text-[11px] text-[#706b63] font-mono">
-                      Live Cisco IOS 15.1 (show ip route)
+                      Distance-Vector Forwarding State
                     </p>
                   </div>
                 </div>
@@ -829,118 +853,64 @@ export const Topology = () => {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto mt-4 space-y-5 pr-1 font-mono">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-[#1e1c19] uppercase tracking-wider">
-                      Active Routing Table ({routesData.routes.length})
-                    </span>
-                    <span className="text-[10px] text-emerald-800 font-mono font-semibold">
-                      Cisco IOS Synchronized
-                    </span>
-                  </div>
-
-                  <div className="border border-[#dfd8c8] rounded-lg overflow-hidden bg-white">
-                    <table className="w-full text-left text-xs text-[#1e1c19]">
-                      <thead className="bg-[#eae4d8] text-[#554f45] text-[10px] uppercase font-semibold border-b border-[#dfd8c8]">
-                        <tr>
-                          <th className="px-3 py-2">Code</th>
-                          <th className="px-3 py-2">Network Prefix</th>
-                          <th className="px-3 py-2">Target / Next Hop</th>
-                          <th className="px-3 py-2">Type</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#dfd8c8] font-mono">
-                        {routesData.routes.map((r, i) => (
-                          <tr key={i} className="hover:bg-[#f7f4ed]">
-                            <td className="px-3 py-2">
-                              <span
-                                className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                                  r.code === 'C'
-                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                    : r.code === 'S*'
-                                    ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                                    : 'bg-sky-100 text-sky-800 border border-sky-300'
-                                }`}
-                              >
-                                {r.code}
-                              </span>
-                            </td>
-                            <td className="px-3 py-2 font-semibold text-[#1e1c19]">
-                              {r.prefix}
-                            </td>
-                            <td className="px-3 py-2 text-[11px] text-[#706b63]">
-                              {r.target}
-                            </td>
-                            <td className="px-3 py-2 text-[10px] text-[#706b63] font-sans">
-                              {r.type}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div className="mt-2 flex items-center space-x-3 text-[10px] text-[#706b63]">
-                    <span className="flex items-center space-x-1">
-                      <span className="w-2 h-2 rounded-full bg-emerald-600" />
-                      <span>C: Connected</span>
-                    </span>
-                    <span className="flex items-center space-x-1">
-                      <span className="w-2 h-2 rounded-full bg-sky-600" />
-                      <span>L: Local Interface</span>
-                    </span>
-                    <span className="flex items-center space-x-1">
-                      <span className="w-2 h-2 rounded-full bg-amber-600" />
-                      <span>S*: Default WAN Route</span>
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-[#1e1c19] uppercase tracking-wider flex items-center space-x-1.5 font-sans">
-                      <Clock className="w-3.5 h-3.5 text-indigo-700" />
-                      <span>Routing Table Event History</span>
-                    </span>
-                    <span className="text-[10px] text-[#706b63]">
-                      Scroll to review
-                    </span>
-                  </div>
-
-                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                    {routesData.history.map((h) => (
-                      <div
-                        key={h.id}
-                        className="p-3 bg-white rounded-lg border border-[#dfd8c8] text-xs"
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span
-                            className={`font-semibold ${
-                              h.event.includes('Dropped')
-                                ? 'text-rose-700'
-                                : h.event.includes('Restored')
-                                ? 'text-emerald-700'
-                                : 'text-indigo-700'
-                            }`}
-                          >
-                            {h.event}
-                          </span>
-                          <span className="text-[10px] font-mono text-[#706b63]">
-                            {h.timestamp}
-                          </span>
-                        </div>
-                        <p className="text-[#1e1c19] text-[11px] font-sans">{h.detail}</p>
-                        <div className="mt-1.5 flex items-center justify-between text-[10px] text-[#706b63] border-t border-[#dfd8c8] pt-1 font-mono">
-                          <span>Active Routes: {h.route_count}</span>
-                          <span className="text-indigo-800">
-                            show ip route
-                          </span>
-                        </div>
+              <div className="flex-1 overflow-y-auto mt-4 space-y-4 pr-1 font-mono">
+                {(routesData.tables || []).map((tbl) => (
+                  <div
+                    key={tbl.router}
+                    className="bg-white border border-[#dfd8c8] rounded-xl p-3.5 shadow-2xs space-y-2.5"
+                  >
+                    <div className="flex items-center justify-between border-b border-[#dfd8c8] pb-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
+                        <h4 className="font-bold text-sm text-[#1e1c19] tracking-tight">
+                          {tbl.router}
+                        </h4>
                       </div>
-                    ))}
+                      <span className="text-[11px] text-[#706b63] font-sans">
+                        {tbl.role}
+                      </span>
+                    </div>
+
+                    <div className="border border-[#dfd8c8] rounded-lg overflow-hidden">
+                      <table className="w-full text-left text-xs text-[#1e1c19]">
+                        <thead className="bg-[#eae4d8] text-[#554f45] text-[10px] uppercase font-semibold border-b border-[#dfd8c8]">
+                          <tr>
+                            <th className="px-3 py-2 font-mono">Destination Router</th>
+                            <th className="px-3 py-2 text-center font-mono">Distance</th>
+                            <th className="px-3 py-2 font-mono">Next Hop</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#dfd8c8] font-mono">
+                          {tbl.routes.map((r, i) => (
+                            <tr key={i} className="hover:bg-[#f7f4ed]">
+                              <td className="px-3 py-2 font-semibold text-[#1e1c19]">
+                                {r.destination}
+                              </td>
+                              <td className="px-3 py-2 text-center">
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                    r.distance === 0
+                                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                      : r.distance === 1
+                                      ? 'bg-indigo-100 text-indigo-800 border border-indigo-300'
+                                      : r.distance === 'Unreachable'
+                                      ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                                      : 'bg-amber-100 text-amber-800 border border-amber-300'
+                                  }`}
+                                >
+                                  {r.distance}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2 text-[11px] text-[#554f45]">
+                                {r.nextHop}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
             </div>
 

@@ -13,7 +13,14 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 
 ## Implemented Features
 
-### 1. Option B Multi-Router WAN Edge & Internet Gateway Integration:
+### 1. Multi-Router Campus Interconnect & 3-Column Distance-Vector Routing Tables:
+- Configured dedicated Department Gateway Routers inside each academic block (`Router-CS`, `Router-LIB`, `Router-ADMIN`, `Router-DC`) connecting downstream to department access switches and upstream to `Campus-Core-Router`.
+- Added lateral mesh links between adjacent blocks (`Router-CS <-> Router-LIB` and `Router-ADMIN <-> Router-DC`) for campus-level path redundancy.
+- Implemented dynamic shortest path routing computation that generates current distance-vector tables with exactly 3 columns: `Destination Router`, `Distance`, `Next Hop`.
+- Streamlined Routing Tables drawer to render each router's active table sequentially down the page with zero historical logs or past sync entries.
+- Integrated active path BFS visualizer tracing packet flow from hosts through switches and routers to the ISP edge.
+
+### 2. Option B Multi-Router WAN Edge & Internet Gateway Integration:
 - Configured external `ISP-Edge-Router` (Cisco 2911) outside the campus boundary on WAN subnet `203.0.113.0/30`.
 - Configured public destination `8.8.8.8` (Google Public DNS) on `ISP-Edge-Router` Loopback0.
 - Configured default static route `ip route 0.0.0.0 0.0.0.0 203.0.113.2` on `Campus-Core-Router`.
@@ -36,15 +43,15 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 - Verified two-way communication: live device discovery, port state inspection, Cisco IOS CLI execution, and host ICMP ping execution.
 
 ### 2. Python Flask REST Backend (`backend/`):
-- `GET /api/status` — Live Packet Tracer connection state, PT version, device and link counts.
-- `GET /api/topology` — React Flow formatted nodes (with PT canvas coordinates) and edges.
-- `GET /api/departments` — Department VLANs, subnets, gateways, and switches.
-- `GET /api/devices` — Active devices list from Packet Tracer.
-- `POST /api/devices/add` — Spawns a PC-PT on canvas, automatically cables it to the department switch with a straight-through cable, and configures IP/DHCP.
-- `DELETE /api/devices/<name>` — Removes a device from the Packet Tracer workspace.
-- `POST /api/simulate/ping` — Executes live ping from a host's command prompt inside Packet Tracer and returns exact ICMP statistics.
-- `POST /api/acl/apply` — Pushes Cisco IOS ACL rules to `Campus-Core-Router` in real time.
-- `GET /api/events` — Live simulated network event logs.
+- `GET /api/status` - Live Packet Tracer connection state, PT version, device and link counts.
+- `GET /api/topology` - React Flow formatted nodes (with PT canvas coordinates) and edges.
+- `GET /api/departments` - Department VLANs, subnets, gateways, and switches.
+- `GET /api/devices` - Active devices list from Packet Tracer.
+- `POST /api/devices/add` - Spawns a PC-PT on canvas, automatically cables it to the department switch with a straight-through cable, and configures IP/DHCP.
+- `DELETE /api/devices/<name>` - Removes a device from the Packet Tracer workspace.
+- `POST /api/simulate/ping` - Executes live ping from a host's command prompt inside Packet Tracer and returns exact ICMP statistics.
+- `POST /api/acl/apply` - Pushes Cisco IOS ACL rules to `Campus-Core-Router` in real time.
+- `GET /api/events` - Live simulated network event logs.
 
 ### 3. React 18 + Vite Frontend (`frontend/` in JavaScript & JSX):
 - **Dashboard:** Telemetry cards, department subnet utilization bars, live event log feed, and one-click Packet Tracer sync.
@@ -56,18 +63,18 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 
 ## Architecture and Important Files
 
-- `start.sh` — Self-bootstrapping 1-click startup script (macOS/Linux) handling venv & npm install.
-- `start.bat` — Self-bootstrapping 1-click startup script (Windows) handling venv & npm install.
-- `backend/app.py` — Flask REST API server interfacing with Packet Tracer.
-- `backend/pt_client.py` — Native IPC bridge client managing JSON-RPC MCP calls to `pktctl`.
-- `backend/bin/pktctl` — Precompiled Apple Silicon binary speaking PTMP to Packet Tracer.
-- `packet-tracer/campusnet_backbone.pkt` — Baseline campus topology file.
-- `frontend/src/App.jsx` — Main application component managing tabs and data synchronization.
-- `frontend/src/services/api.js` — Frontend API client connecting to backend endpoints.
-- `frontend/src/pages/Dashboard.jsx` — Overview metrics and subnet utilization.
-- `frontend/src/pages/Topology.jsx` — React Flow network canvas.
-- `frontend/src/pages/IPManager.jsx` — Workstation provisioning and IP management.
-- `frontend/src/pages/SecurityCenter.jsx` — Live ping simulation and ACL rule manager.
+- `start.sh` - Self-bootstrapping 1-click startup script (macOS/Linux) handling venv & npm install.
+- `start.bat` - Self-bootstrapping 1-click startup script (Windows) handling venv & npm install.
+- `backend/app.py` - Flask REST API server interfacing with Packet Tracer.
+- `backend/pt_client.py` - Native IPC bridge client managing JSON-RPC MCP calls to `pktctl`.
+- `backend/bin/pktctl` - Precompiled Apple Silicon binary speaking PTMP to Packet Tracer.
+- `packet-tracer/campusnet_backbone.pkt` - Baseline campus topology file.
+- `frontend/src/App.jsx` - Main application component managing tabs and data synchronization.
+- `frontend/src/services/api.js` - Frontend API client connecting to backend endpoints.
+- `frontend/src/pages/Dashboard.jsx` - Overview metrics and subnet utilization.
+- `frontend/src/pages/Topology.jsx` - React Flow network canvas.
+- `frontend/src/pages/IPManager.jsx` - Workstation provisioning and IP management.
+- `frontend/src/pages/SecurityCenter.jsx` - Live ping simulation and ACL rule manager.
 
 ---
 

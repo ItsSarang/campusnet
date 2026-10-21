@@ -3,6 +3,7 @@ import sys
 import re
 import datetime
 import logging
+from collections import deque
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
@@ -27,6 +28,7 @@ DEPARTMENTS = {
         "vlan": 10,
         "subnet": "192.168.10.0/24",
         "gateway": "192.168.10.1",
+        "router": "Router-CS",
         "switch": "SW-CS",
         "color": "#3b82f6",
     },
@@ -38,6 +40,7 @@ DEPARTMENTS = {
         "vlan": 20,
         "subnet": "192.168.20.0/24",
         "gateway": "192.168.20.1",
+        "router": "Router-LIB",
         "switch": "SW-LIB",
         "color": "#10b981",
     },
@@ -49,6 +52,7 @@ DEPARTMENTS = {
         "vlan": 30,
         "subnet": "192.168.30.0/24",
         "gateway": "192.168.30.1",
+        "router": "Router-ADMIN",
         "switch": "SW-ADMIN",
         "color": "#f59e0b",
     },
@@ -60,10 +64,140 @@ DEPARTMENTS = {
         "vlan": 100,
         "subnet": "192.168.100.0/24",
         "gateway": "192.168.100.1",
+        "router": "Router-DC",
         "switch": "SW-SERVERS",
         "color": "#8b5cf6",
     },
 }
+
+ROUTER_CONFIGS = [
+    {
+        "name": "Router-CS",
+        "department": "dept-cs",
+        "role": "Academic Block A Gateway",
+        "ip": "192.168.10.1",
+        "subnet": "192.168.10.0/24",
+    },
+    {
+        "name": "Router-LIB",
+        "department": "dept-lib",
+        "role": "Academic Block B Gateway",
+        "ip": "192.168.20.1",
+        "subnet": "192.168.20.0/24",
+    },
+    {
+        "name": "Router-ADMIN",
+        "department": "dept-admin",
+        "role": "Academic Block C Gateway",
+        "ip": "192.168.30.1",
+        "subnet": "192.168.30.0/24",
+    },
+    {
+        "name": "Router-DC",
+        "department": "dept-dc",
+        "role": "Campus Data Center Gateway",
+        "ip": "192.168.100.1",
+        "subnet": "192.168.100.0/24",
+    },
+    {
+        "name": "Campus-Core-Router",
+        "department": "core",
+        "role": "Campus Core Distribution Hub",
+        "ip": "192.168.10.1 / 20.1 / 30.1 / 100.1 / 203.0.113.1",
+        "subnet": "802.1Q Backbone",
+    },
+    {
+        "name": "ISP-Edge-Router",
+        "department": "isp",
+        "role": "External Internet Gateway (WAN)",
+        "ip": "203.0.113.2 / 8.8.8.8",
+        "subnet": "203.0.113.0/30",
+    },
+]
+
+ROUTER_GRAPH_EDGES = [
+    ("Router-CS", "Campus-Core-Router", "dept-cs"),
+    ("Router-LIB", "Campus-Core-Router", "dept-lib"),
+    ("Router-ADMIN", "Campus-Core-Router", "dept-admin"),
+    ("Router-DC", "Campus-Core-Router", "dept-dc"),
+    ("Router-CS", "Router-LIB", None),
+    ("Router-ADMIN", "Router-DC", None),
+    ("Campus-Core-Router", "ISP-Edge-Router", None),
+]
+
+def compute_router_tables(cut_depts=None):
+    if cut_depts is None:
+        cut_depts = set()
+    else:
+        cut_depts = set(cut_depts)
+
+    router_names = [rc["name"] for rc in ROUTER_CONFIGS]
+    adj = {r: [] for r in router_names}
+    for u, v, dept in ROUTER_GRAPH_EDGES:
+        if dept and dept in cut_depts:
+            continue
+        adj[u].append(v)
+        adj[v].append(u)
+
+    result_tables = []
+    for rc in ROUTER_CONFIGS:
+        src = rc["name"]
+        routes = []
+        for dst_rc in ROUTER_CONFIGS:
+            dst = dst_rc["name"]
+            if src == dst:
+                routes.append(
+                    {
+                        "destination": dst,
+                        "distance": 0,
+                        "nextHop": "Direct",
+                    }
+                )
+                continue
+
+            q = deque([[src]])
+            visited = {src}
+            found_path = None
+            while q:
+                path = q.popleft()
+                curr = path[-1]
+                if curr == dst:
+                    found_path = path
+                    break
+                for nxt in adj.get(curr, []):
+                    if nxt not in visited:
+                        visited.add(nxt)
+                        q.append(path + [nxt])
+
+            if found_path:
+                routes.append(
+                    {
+                        "destination": dst,
+                        "distance": len(found_path) - 1,
+                        "nextHop": found_path[1],
+                    }
+                )
+            else:
+                routes.append(
+                    {
+                        "destination": dst,
+                        "distance": "Unreachable",
+                        "nextHop": "None",
+                    }
+                )
+
+        result_tables.append(
+            {
+                "router": src,
+                "department": rc["department"],
+                "role": rc["role"],
+                "ip": rc["ip"],
+                "subnet": rc["subnet"],
+                "routes": routes,
+            }
+        )
+
+    return result_tables
 
 BUILDINGS = [
     {
@@ -304,10 +438,10 @@ def get_topology():
             else:
                 non_pcs.append(d)
 
-        height_cs = max(290, 190 + ((len(dept_devices["dept-cs"]) + 1) // 2) * 85)
-        height_lib = max(290, 190 + ((len(dept_devices["dept-lib"]) + 1) // 2) * 85)
-        height_admin = max(290, 190 + ((len(dept_devices["dept-admin"]) + 1) // 2) * 85)
-        height_dc = max(290, 190 + ((len(dept_devices["dept-dc"]) + 1) // 2) * 85)
+        height_cs = max(340, 245 + ((len(dept_devices["dept-cs"]) + 1) // 2) * 85 + 30)
+        height_lib = max(340, 245 + ((len(dept_devices["dept-lib"]) + 1) // 2) * 85 + 30)
+        height_admin = max(340, 245 + ((len(dept_devices["dept-admin"]) + 1) // 2) * 85 + 30)
+        height_dc = max(340, 245 + ((len(dept_devices["dept-dc"]) + 1) // 2) * 85 + 30)
 
         cs_block_y = 60
         lib_block_y = cs_block_y + height_cs + 40
@@ -338,7 +472,7 @@ def get_topology():
                 "x": 480,
                 "y": 160,
                 "width": 380,
-                "height": 330,
+                "height": 260,
             },
             {
                 "id": "block-cs",
@@ -392,90 +526,51 @@ def get_topology():
 
         nodes = []
 
-        for d in non_pcs:
-            kind = d.get("kind", "device")
-            model = d.get("model", "")
-            name = d.get("name", "")
+        nodes.append(
+            {
+                "id": "ISP-Edge-Router",
+                "type": "routerNode",
+                "position": {"x": 640, "y": 0},
+                "draggable": False,
+                "data": {
+                    "label": "ISP-Edge-Router",
+                    "kind": "router",
+                    "model": "2911",
+                    "department": None,
+                    "departmentName": "External ISP Gateway",
+                    "block": "External Internet Gateway",
+                    "ip": "203.0.113.2 / 8.8.8.8",
+                    "ipMode": "Public WAN IP",
+                    "vlan": "WAN",
+                    "gateway": "203.0.113.1",
+                    "subnet": "203.0.113.0/30",
+                    "status": "online",
+                },
+            }
+        )
 
-            dept_id = None
-            if "CS" in name:
-                dept_id = "dept-cs"
-            elif "LIB" in name:
-                dept_id = "dept-lib"
-            elif "ADMIN" in name:
-                dept_id = "dept-admin"
-            elif "SERVER" in name or "DNS" in name:
-                dept_id = "dept-dc"
-
-            flow_type = "hostNode"
-            if kind == "router":
-                flow_type = "routerNode"
-            elif kind == "switch":
-                flow_type = "switchNode"
-            elif kind == "server":
-                flow_type = "serverNode"
-
-            if name == "ISP-Edge-Router":
-                pos = {"x": 640, "y": 0}
-            elif name == "Campus-Core-Router":
-                pos = {"x": 640, "y": 235}
-            elif name == "Core-Dist-SW":
-                pos = {"x": 640, "y": 365}
-            elif name == "SW-CS":
-                pos = {"x": 210, "y": cs_block_y + 75}
-            elif name == "SW-LIB":
-                pos = {"x": 210, "y": lib_block_y + 75}
-            elif name == "SW-ADMIN":
-                pos = {"x": 1070, "y": admin_block_y + 75}
-            elif name == "SW-SERVERS":
-                pos = {"x": 1070, "y": dc_block_y + 75}
-            else:
-                pos = {"x": d.get("x", 400.0) - 200, "y": d.get("y", 300.0) - 100}
-
-            dept = DEPARTMENTS.get(dept_id)
-            if name == "ISP-Edge-Router":
-                ip_addr = "203.0.113.2 / 8.8.8.8"
-                ip_mode = "Public WAN IP"
-            elif name == "Campus-Core-Router":
-                ip_addr = "192.168.10.1 / 20.1 / 30.1 / 100.1 / 203.0.113.1"
-                ip_mode = "Layer 3 SVI & WAN Gateway"
-            elif kind == "switch":
-                ip_addr = "Layer 2 Transparent"
-                ip_mode = "802.1Q Trunk / Access"
-            else:
-                ip_addr = "192.168.x.x"
-                ip_mode = "Infrastructure"
-
-            block_name = (
-                "External Internet Gateway"
-                if name == "ISP-Edge-Router"
-                else dept["block"]
-                if dept
-                else "Campus Core Distribution Hub"
-            )
-
-            nodes.append(
-                {
-                    "id": name,
-                    "type": flow_type,
-                    "position": pos,
-                    "draggable": False,
-                    "data": {
-                        "label": name,
-                        "kind": kind,
-                        "model": model,
-                        "department": dept_id,
-                        "departmentName": dept["name"] if dept else ("External ISP Gateway" if name == "ISP-Edge-Router" else "Campus Core Backbone"),
-                        "block": block_name,
-                        "ip": ip_addr,
-                        "ipMode": ip_mode,
-                        "vlan": dept["vlan"] if dept else ("WAN" if name == "ISP-Edge-Router" else "10, 20, 30, 100" if kind == "router" else 1),
-                        "gateway": dept["gateway"] if dept else ("203.0.113.1" if name == "ISP-Edge-Router" else "192.168.10.1"),
-                        "subnet": dept["subnet"] if dept else ("203.0.113.0/30" if name == "ISP-Edge-Router" else "802.1Q Backbone"),
-                        "status": "online",
-                    },
-                }
-            )
+        nodes.append(
+            {
+                "id": "Campus-Core-Router",
+                "type": "routerNode",
+                "position": {"x": 640, "y": 245},
+                "draggable": False,
+                "data": {
+                    "label": "Campus-Core-Router",
+                    "kind": "router",
+                    "model": "2911",
+                    "department": None,
+                    "departmentName": "Campus Core Backbone",
+                    "block": "Campus Core Distribution Hub",
+                    "ip": "192.168.10.1 / 20.1 / 30.1 / 100.1 / 203.0.113.1",
+                    "ipMode": "Campus Core Backbone Router",
+                    "vlan": "10, 20, 30, 100",
+                    "gateway": "192.168.10.1",
+                    "subnet": "802.1Q Backbone",
+                    "status": "online",
+                },
+            }
+        )
 
         dept_layout_info = {
             "dept-cs": (50, cs_block_y, DEPARTMENTS["dept-cs"]),
@@ -483,6 +578,53 @@ def get_topology():
             "dept-admin": (910, admin_block_y, DEPARTMENTS["dept-admin"]),
             "dept-dc": (910, dc_block_y, DEPARTMENTS["dept-dc"]),
         }
+
+        for dept_id, (base_x, base_y, dept) in dept_layout_info.items():
+            nodes.append(
+                {
+                    "id": dept["router"],
+                    "type": "routerNode",
+                    "position": {"x": base_x + 160, "y": base_y + 65},
+                    "draggable": False,
+                    "data": {
+                        "label": dept["router"],
+                        "kind": "router",
+                        "model": "2911",
+                        "department": dept_id,
+                        "departmentName": dept["name"],
+                        "block": dept["block"],
+                        "ip": dept["gateway"],
+                        "ipMode": "Department Gateway Router",
+                        "vlan": dept["vlan"],
+                        "gateway": dept["gateway"],
+                        "subnet": dept["subnet"],
+                        "status": "online",
+                    },
+                }
+            )
+
+            nodes.append(
+                {
+                    "id": dept["switch"],
+                    "type": "switchNode",
+                    "position": {"x": base_x + 160, "y": base_y + 155},
+                    "draggable": False,
+                    "data": {
+                        "label": dept["switch"],
+                        "kind": "switch",
+                        "model": "2960-24TT",
+                        "department": dept_id,
+                        "departmentName": dept["name"],
+                        "block": dept["block"],
+                        "ip": "Layer 2 Transparent",
+                        "ipMode": "802.1Q Trunk / Access",
+                        "vlan": dept["vlan"],
+                        "gateway": dept["gateway"],
+                        "subnet": dept["subnet"],
+                        "status": "online",
+                    },
+                }
+            )
 
         for dept_id, d_list in dept_devices.items():
             base_x, base_y, dept = dept_layout_info[dept_id]
@@ -494,12 +636,12 @@ def get_topology():
 
                 if name == "Campus-DNS-Server":
                     pos_x = base_x + 160
-                    pos_y = base_y + 185
+                    pos_y = base_y + 245
                     ip_addr = "192.168.100.10"
                     ip_mode = "Static"
                 else:
                     pos_x = base_x + 80 + (idx % 2) * 160
-                    pos_y = base_y + 185 + (idx // 2) * 85
+                    pos_y = base_y + 245 + (idx // 2) * 85
                     ip_addr = f"192.168.{dept['vlan']}.5{idx + 1}"
                     ip_mode = "DHCP Dynamic Pool"
 
@@ -527,42 +669,116 @@ def get_topology():
                 )
 
         edges = []
-        for idx, link in enumerate(links):
-            dev_a = link.get("a", {}).get("device", "")
-            port_a = link.get("a", {}).get("port", "")
-            dev_b = link.get("b", {}).get("device", "")
-            port_b = link.get("b", {}).get("port", "")
+        edge_idx = 0
 
-            link_dept = None
-            for dept_key, dept_val in DEPARTMENTS.items():
-                if dept_val["switch"] in (dev_a, dev_b):
-                    link_dept = dept_key
-                    break
+        edges.append(
+            {
+                "id": f"link-{edge_idx}-Campus-Core-Router-ISP-Edge-Router",
+                "source": "Campus-Core-Router",
+                "target": "ISP-Edge-Router",
+                "label": None,
+                "animated": True,
+                "isCut": False,
+                "departmentId": None,
+                "portA": "GigabitEthernet0/1",
+                "portB": "GigabitEthernet0/0",
+                "style": {"stroke": "#827666", "strokeWidth": 2},
+            }
+        )
+        edge_idx += 1
 
-            is_cut = link_dept in CUT_DEPARTMENTS
-
+        for dept_id, (_, _, dept) in dept_layout_info.items():
+            is_cut = dept_id in CUT_DEPARTMENTS
             edge_style = (
                 {"stroke": "#ef4444", "strokeWidth": 3, "strokeDasharray": "6,6"}
                 if is_cut
                 else {"stroke": "#827666", "strokeWidth": 2}
             )
-
             label_text = "[LINK SEVERED]" if is_cut else None
 
             edges.append(
                 {
-                    "id": f"link-{idx}-{dev_a}-{dev_b}",
-                    "source": dev_a,
-                    "target": dev_b,
+                    "id": f"link-{edge_idx}-{dept['router']}-Campus-Core-Router",
+                    "source": dept["router"],
+                    "target": "Campus-Core-Router",
                     "label": label_text,
                     "animated": not is_cut,
                     "isCut": is_cut,
-                    "departmentId": link_dept,
-                    "portA": port_a,
-                    "portB": port_b,
+                    "departmentId": dept_id,
+                    "portA": "GigabitEthernet0/1",
+                    "portB": f"GigabitEthernet0/0.{dept['vlan']}",
                     "style": edge_style,
                 }
             )
+            edge_idx += 1
+
+            edges.append(
+                {
+                    "id": f"link-{edge_idx}-{dept['router']}-{dept['switch']}",
+                    "source": dept["router"],
+                    "target": dept["switch"],
+                    "label": None,
+                    "animated": True,
+                    "isCut": False,
+                    "departmentId": dept_id,
+                    "portA": "GigabitEthernet0/0",
+                    "portB": "FastEthernet0/1",
+                    "style": {"stroke": "#827666", "strokeWidth": 2},
+                }
+            )
+            edge_idx += 1
+
+        edges.append(
+            {
+                "id": f"link-{edge_idx}-Router-CS-Router-LIB",
+                "source": "Router-CS",
+                "target": "Router-LIB",
+                "label": None,
+                "animated": True,
+                "isCut": False,
+                "departmentId": None,
+                "portA": "GigabitEthernet0/2",
+                "portB": "GigabitEthernet0/2",
+                "style": {"stroke": "#827666", "strokeWidth": 2},
+            }
+        )
+        edge_idx += 1
+
+        edges.append(
+            {
+                "id": f"link-{edge_idx}-Router-ADMIN-Router-DC",
+                "source": "Router-ADMIN",
+                "target": "Router-DC",
+                "label": None,
+                "animated": True,
+                "isCut": False,
+                "departmentId": None,
+                "portA": "GigabitEthernet0/2",
+                "portB": "GigabitEthernet0/2",
+                "style": {"stroke": "#827666", "strokeWidth": 2},
+            }
+        )
+        edge_idx += 1
+
+        for dept_id, d_list in dept_devices.items():
+            dept = DEPARTMENTS[dept_id]
+            for host_idx, d in enumerate(d_list):
+                dev_name = d.get("name", "")
+                edges.append(
+                    {
+                        "id": f"link-{edge_idx}-{dept['switch']}-{dev_name}",
+                        "source": dept["switch"],
+                        "target": dev_name,
+                        "label": None,
+                        "animated": True,
+                        "isCut": False,
+                        "departmentId": dept_id,
+                        "portA": f"FastEthernet0/{host_idx + 2}",
+                        "portB": "FastEthernet0",
+                        "style": {"stroke": "#827666", "strokeWidth": 2},
+                    }
+                )
+                edge_idx += 1
 
         return jsonify(
             {
@@ -639,6 +855,8 @@ def toggle_link():
         },
     )
 
+    tables = compute_router_tables(CUT_DEPARTMENTS)
+
     return jsonify(
         {
             "success": True,
@@ -646,7 +864,9 @@ def toggle_link():
             "action": action,
             "isCut": dept_id in CUT_DEPARTMENTS,
             "routes": routes,
+            "tables": tables,
             "history": ROUTING_HISTORY,
+            "cutDepartments": list(CUT_DEPARTMENTS),
         }
     )
 
@@ -654,11 +874,13 @@ def toggle_link():
 @app.route("/api/router/routes", methods=["GET"])
 def get_router_routes():
     try:
+        tables = compute_router_tables(CUT_DEPARTMENTS)
         raw_routes = pt.run_cli("Campus-Core-Router", "show ip route\n")
         routes = parse_routing_table(raw_routes)
         return jsonify(
             {
                 "routes": routes,
+                "tables": tables,
                 "raw": raw_routes,
                 "history": ROUTING_HISTORY,
                 "cutDepartments": list(CUT_DEPARTMENTS),
@@ -666,9 +888,11 @@ def get_router_routes():
         )
     except Exception as e:
         logger.error(f"Routing table error: {e}")
+        tables = compute_router_tables(CUT_DEPARTMENTS)
         return jsonify(
             {
                 "routes": [],
+                "tables": tables,
                 "raw": "",
                 "history": ROUTING_HISTORY,
                 "cutDepartments": list(CUT_DEPARTMENTS),
