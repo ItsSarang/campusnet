@@ -19,6 +19,55 @@ CORS(app)
 pt = PacketTracerClient()
 pt.start()
 
+
+def calculate_subnet_for_capacity(vlan: int, max_hosts: int):
+    needed = max_hosts + 3
+    h = 3
+    while (1 << h) < needed and h < 8:
+        h += 1
+    prefix = 32 - h
+    host_count = (1 << h) - 2
+    mask_bytes = [(0xFF << (8 - min(8, max(0, prefix - i * 8)))) & 0xFF for i in range(4)]
+    mask_str = ".".join(str(b) for b in mask_bytes)
+    subnet_cidr = f"192.168.{vlan}.0/{prefix}"
+    return {
+        "cidr": subnet_cidr,
+        "prefix": prefix,
+        "mask": mask_str,
+        "totalUsable": host_count,
+    }
+
+
+def count_devices_per_department():
+    counts = {
+        "dept-cs": 0,
+        "dept-lib": 0,
+        "dept-admin": 0,
+        "dept-dc": 0,
+    }
+    try:
+        devices = pt.list_devices()
+        for d in devices:
+            kind = d.get("kind", "device")
+            name = d.get("name", "")
+            if kind == "power_distribution_device":
+                continue
+            if kind in ("pc", "host") or d.get("model") == "PC-PT":
+                if "CS" in name or name.startswith("CS-") or name == "PC2":
+                    counts["dept-cs"] += 1
+                elif "LIB" in name or name.startswith("LIB-"):
+                    counts["dept-lib"] += 1
+                elif "ADMIN" in name or name.startswith("ADMIN-"):
+                    counts["dept-admin"] += 1
+                else:
+                    counts["dept-cs"] += 1
+            elif kind == "server" or d.get("model") == "Server-PT":
+                counts["dept-dc"] += 1
+    except Exception:
+        pass
+    return counts
+
+
 DEPARTMENTS = {
     "dept-cs": {
         "id": "dept-cs",
@@ -26,7 +75,11 @@ DEPARTMENTS = {
         "block": "Academic Block A - Computer Science",
         "code": "CS",
         "vlan": 10,
-        "subnet": "192.168.10.0/24",
+        "subnet": "192.168.10.0/27",
+        "mask": "255.255.255.224",
+        "maxHosts": 30,
+        "currentHosts": 2,
+        "totalUsable": 30,
         "gateway": "192.168.10.1",
         "router": "Router-CS",
         "switch": "SW-CS",
@@ -38,7 +91,11 @@ DEPARTMENTS = {
         "block": "Academic Block B - Central Library",
         "code": "LIB",
         "vlan": 20,
-        "subnet": "192.168.20.0/24",
+        "subnet": "192.168.20.0/27",
+        "mask": "255.255.255.224",
+        "maxHosts": 20,
+        "currentHosts": 1,
+        "totalUsable": 30,
         "gateway": "192.168.20.1",
         "router": "Router-LIB",
         "switch": "SW-LIB",
@@ -50,7 +107,11 @@ DEPARTMENTS = {
         "block": "Academic Block C - Administration",
         "code": "ADMIN",
         "vlan": 30,
-        "subnet": "192.168.30.0/24",
+        "subnet": "192.168.30.0/28",
+        "mask": "255.255.255.240",
+        "maxHosts": 14,
+        "currentHosts": 0,
+        "totalUsable": 14,
         "gateway": "192.168.30.1",
         "router": "Router-ADMIN",
         "switch": "SW-ADMIN",
@@ -62,7 +123,11 @@ DEPARTMENTS = {
         "block": "Campus Data Center - Server Facility",
         "code": "DC",
         "vlan": 100,
-        "subnet": "192.168.100.0/24",
+        "subnet": "192.168.100.0/28",
+        "mask": "255.255.255.240",
+        "maxHosts": 10,
+        "currentHosts": 2,
+        "totalUsable": 14,
         "gateway": "192.168.100.1",
         "router": "Router-DC",
         "switch": "SW-SERVERS",
@@ -481,7 +546,72 @@ def get_status():
 
 @app.route("/api/departments", methods=["GET"])
 def get_departments():
+    counts = count_devices_per_department()
+    for dept_id, dept in DEPARTMENTS.items():
+        curr = counts.get(dept_id, 0)
+        dept["currentHosts"] = curr
+        if dept.get("maxHosts", 0) < curr:
+            dept["maxHosts"] = max(curr, 10)
+        calc = calculate_subnet_for_capacity(dept["vlan"], dept["maxHosts"])
+        dept["subnet"] = calc["cidr"]
+        dept["mask"] = calc["mask"]
+        dept["prefix"] = calc["prefix"]
+        dept["totalUsable"] = calc["totalUsable"]
     return jsonify(list(DEPARTMENTS.values()))
+
+
+@app.route("/api/departments/capacity", methods=["POST"])
+def update_department_capacity():
+    data = request.json or {}
+    dept_id = data.get("departmentId")
+    max_hosts = data.get("maxHosts")
+
+    if not dept_id or dept_id not in DEPARTMENTS:
+        return jsonify({"error": "Invalid departmentId"}), 400
+
+    dept = DEPARTMENTS[dept_id]
+    counts = count_devices_per_department()
+    current_count = counts.get(dept_id, 0)
+    dept["currentHosts"] = current_count
+
+    try:
+        max_hosts = int(max_hosts)
+    except (ValueError, TypeError):
+        return jsonify({"error": "maxHosts must be a valid integer"}), 400
+
+    if max_hosts < current_count:
+        return jsonify(
+            {
+                "error": f"Cannot reduce max PCs below current count of {current_count}!"
+            }
+        ), 400
+
+    if max_hosts > 250:
+        return jsonify(
+            {
+                "error": "Max capacity cannot exceed 250 PCs for a /24 campus block!"
+            }
+        ), 400
+
+    calc = calculate_subnet_for_capacity(dept["vlan"], max_hosts)
+    dept["maxHosts"] = max_hosts
+    dept["subnet"] = calc["cidr"]
+    dept["mask"] = calc["mask"]
+    dept["prefix"] = calc["prefix"]
+    dept["totalUsable"] = calc["totalUsable"]
+
+    log_event(
+        "CONFIG",
+        f"Updated {dept['name']} capacity to {max_hosts} PCs. Recalculated subnet to {dept['subnet']} (Mask: {dept['mask']})",
+    )
+
+    return jsonify(
+        {
+            "success": True,
+            "department": dept,
+            "departments": list(DEPARTMENTS.values()),
+        }
+    )
 
 
 @app.route("/api/topology", methods=["GET"])
@@ -559,7 +689,10 @@ def get_topology():
                 "name": "Academic Block A - Computer Science",
                 "departmentId": "dept-cs",
                 "vlan": 10,
-                "subnet": "192.168.10.0/24",
+                "subnet": DEPARTMENTS["dept-cs"]["subnet"],
+                "mask": DEPARTMENTS["dept-cs"]["mask"],
+                "maxHosts": DEPARTMENTS["dept-cs"]["maxHosts"],
+                "currentHosts": DEPARTMENTS["dept-cs"]["currentHosts"],
                 "color": "#3b82f6",
                 "x": 50,
                 "y": cs_block_y,
@@ -571,7 +704,10 @@ def get_topology():
                 "name": "Academic Block B - Central Library",
                 "departmentId": "dept-lib",
                 "vlan": 20,
-                "subnet": "192.168.20.0/24",
+                "subnet": DEPARTMENTS["dept-lib"]["subnet"],
+                "mask": DEPARTMENTS["dept-lib"]["mask"],
+                "maxHosts": DEPARTMENTS["dept-lib"]["maxHosts"],
+                "currentHosts": DEPARTMENTS["dept-lib"]["currentHosts"],
                 "color": "#10b981",
                 "x": 50,
                 "y": lib_block_y,
@@ -583,7 +719,10 @@ def get_topology():
                 "name": "Academic Block C - Administration",
                 "departmentId": "dept-admin",
                 "vlan": 30,
-                "subnet": "192.168.30.0/24",
+                "subnet": DEPARTMENTS["dept-admin"]["subnet"],
+                "mask": DEPARTMENTS["dept-admin"]["mask"],
+                "maxHosts": DEPARTMENTS["dept-admin"]["maxHosts"],
+                "currentHosts": DEPARTMENTS["dept-admin"]["currentHosts"],
                 "color": "#f59e0b",
                 "x": 910,
                 "y": admin_block_y,
@@ -595,7 +734,10 @@ def get_topology():
                 "name": "Campus Data Center - Server Facility",
                 "departmentId": "dept-dc",
                 "vlan": 100,
-                "subnet": "192.168.100.0/24",
+                "subnet": DEPARTMENTS["dept-dc"]["subnet"],
+                "mask": DEPARTMENTS["dept-dc"]["mask"],
+                "maxHosts": DEPARTMENTS["dept-dc"]["maxHosts"],
+                "currentHosts": DEPARTMENTS["dept-dc"]["currentHosts"],
                 "color": "#8b5cf6",
                 "x": 910,
                 "y": dc_block_y,
@@ -725,10 +867,15 @@ def get_topology():
                 flow_type = "serverNode" if kind == "server" or model == "Server-PT" else "hostNode"
 
                 if name == "Campus-DNS-Server":
-                    pos_x = base_x + 160
+                    pos_x = base_x + 80
                     pos_y = base_y + 245
                     ip_addr = "192.168.100.10"
-                    ip_mode = "Static"
+                    ip_mode = "Static (DNS Service: Active)"
+                elif name == "Campus-DHCP-Server":
+                    pos_x = base_x + 240
+                    pos_y = base_y + 245
+                    ip_addr = "192.168.100.20"
+                    ip_mode = "Static (DHCP Service: Active)"
                 else:
                     pos_x = base_x + 80 + (idx % 2) * 160
                     pos_y = base_y + 245 + (idx // 2) * 85
@@ -883,9 +1030,32 @@ def get_topology():
             dept = DEPARTMENTS[dept_id]
             for host_idx, d in enumerate(d_list):
                 dev_name = d.get("name", "")
-                is_server = dev_name == "Campus-DNS-Server"
+                is_server = dev_name in ("Campus-DNS-Server", "Campus-DHCP-Server")
+                is_dhcp_server = dev_name == "Campus-DHCP-Server"
                 host_edge_id = f"link-{dept['switch']}-{dev_name}"
                 is_host_cut = host_edge_id in CUT_EDGES
+
+                port_a = (
+                    "FastEthernet0/2"
+                    if dev_name == "Campus-DNS-Server"
+                    else "FastEthernet0/3"
+                    if is_dhcp_server
+                    else f"FastEthernet0/{host_idx + 2}"
+                )
+                category_label = (
+                    "Campus Central DHCP Server Infrastructure Link"
+                    if is_dhcp_server
+                    else "Campus DNS & Web Server Infrastructure Link"
+                    if is_server
+                    else f"Workstation Access Patch Cord ({dev_name})"
+                )
+                impact_text = (
+                    "Severing takes central DHCP service offline. Automatic dynamic IP lease provisioning fails campus-wide."
+                    if is_dhcp_server
+                    else "Severing takes central DNS and intranet server offline network-wide."
+                    if is_server
+                    else f"Severing disconnects {dev_name} from network (Physical link down)."
+                )
 
                 edges.append(
                     {
@@ -893,21 +1063,13 @@ def get_topology():
                         "source": dept["switch"],
                         "target": dev_name,
                         "category": "server_uplink" if is_server else "access_port",
-                        "categoryLabel": (
-                            "Campus DNS & Web Server Infrastructure Link"
-                            if is_server
-                            else f"Workstation Access Patch Cord ({dev_name})"
-                        ),
-                        "impact": (
-                            "Severing takes central DNS and intranet server offline network-wide."
-                            if is_server
-                            else f"Severing disconnects {dev_name} from network (Physical link down)."
-                        ),
+                        "categoryLabel": category_label,
+                        "impact": impact_text,
                         "label": "[SEVERED]" if is_host_cut else None,
                         "animated": not is_host_cut,
                         "isCut": is_host_cut,
                         "departmentId": dept_id,
-                        "portA": f"FastEthernet0/{host_idx + 2}",
+                        "portA": port_a,
                         "portB": "FastEthernet0",
                         "style": (
                             {"stroke": "#ef4444", "strokeWidth": 3.5, "strokeDasharray": "6,6"}
@@ -1062,10 +1224,23 @@ def add_device():
     if not dept:
         return jsonify({"error": "Invalid department ID"}), 400
 
+    counts = count_devices_per_department()
+    current_count = counts.get(dept_id, 0)
+    max_hosts = dept.get("maxHosts", 30)
+
+    if current_count >= max_hosts:
+        return jsonify(
+            {
+                "success": False,
+                "error": f"Subnet capacity exceeded for {dept['name']}! Currently at maximum capacity of {current_count}/{max_hosts} PCs. Increase capacity in Dashboard to allocate more hosts.",
+            }
+        ), 400
+
     switch_name = dept["switch"]
     gateway = dept["gateway"]
     is_dhcp = alloc_type == "DHCP"
     ip = static_ip if not is_dhcp else None
+    subnet_mask = dept.get("mask", "255.255.255.0")
 
     base_x = 450.0
     base_y = 450.0
@@ -1083,7 +1258,7 @@ def add_device():
             name=name,
             department_switch=switch_name,
             ip=ip,
-            subnet_mask="255.255.255.0",
+            subnet_mask=subnet_mask,
             gateway=gateway,
             is_dhcp=is_dhcp,
             x=base_x,

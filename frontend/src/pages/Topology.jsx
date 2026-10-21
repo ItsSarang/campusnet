@@ -72,9 +72,19 @@ const BuildingNode = ({ data }) => {
           <span className="text-[10px] font-mono text-[#706b63]">
             {data.subnet}
           </span>
+          {data.mask && (
+            <span className="text-[9px] font-mono text-[#706b63] hidden sm:inline">
+              ({data.mask})
+            </span>
+          )}
           {data.vlan > 0 && (
             <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#eae4d8] text-[#554f45] border border-[#dfd8c8] font-semibold">
               VLAN {data.vlan}
+            </span>
+          )}
+          {data.maxHosts && (
+            <span className="text-[9px] px-1.5 py-0.2 rounded bg-white text-[#554f45] border border-[#dfd8c8] font-mono font-semibold">
+              {data.currentHosts || 0}/{data.maxHosts} PCs
             </span>
           )}
           {isRerouted && (
@@ -287,7 +297,7 @@ const ServerNode = ({ data, selected }) => (
         {data.label}
       </div>
       <div className="text-[9px] font-mono text-amber-700 font-medium">
-        .100.10 DNS
+        {data.label === 'Campus-DHCP-Server' ? '.100.20 DHCP' : '.100.10 DNS'}
       </div>
     </div>
     <Handle
@@ -330,6 +340,20 @@ export const Topology = () => {
   const [deletingDevice, setDeletingDevice] = useState(false);
 
   const handleOpenAddModal = (deptId) => {
+    const blockNode = nodes.find(
+      (n) => n.id === (deptId.startsWith('block-') ? deptId : deptId.replace('dept-', 'block-'))
+    );
+    const curr = blockNode?.data?.currentHosts || 0;
+    const maxH = blockNode?.data?.maxHosts || 30;
+
+    if (curr >= maxH) {
+      setBannerAlert({
+        type: 'error',
+        message: `[CAPACITY EXCEEDED] Cannot add workstation to ${blockNode?.data?.name || deptId}! Subnet limit reached (${curr}/${maxH} PCs max). Increase capacity in Dashboard to allocate more hosts.`,
+      });
+      return;
+    }
+
     setTargetDeptId(deptId);
     const prefix = deptId === 'dept-cs' ? 'CS-PC' : deptId === 'dept-lib' ? 'LIB-PC' : 'ADMIN-PC';
     setNewDeviceName(`${prefix}-0${Math.floor(Math.random() * 80) + 10}`);
@@ -497,10 +521,18 @@ export const Topology = () => {
         setNewDeviceName('');
         await loadTopology();
       } else {
-        alert(res.error || 'Failed to create device');
+        setBannerAlert({
+          type: 'error',
+          message: res.error || 'Failed to create device',
+        });
+        setAddModalOpen(false);
       }
     } catch (err) {
-      alert(`Error creating device: ${err.message}`);
+      setBannerAlert({
+        type: 'error',
+        message: `Error creating device: ${err.message}`,
+      });
+      setAddModalOpen(false);
     } finally {
       setAddingDevice(false);
     }
@@ -1151,9 +1183,23 @@ export const Topology = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#1e1c19] mb-1 font-mono">
-                    Department Zone
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-semibold text-[#1e1c19] font-mono">
+                      Department Zone
+                    </label>
+                    {(() => {
+                      const b = nodes.find(
+                        (n) => n.id === (targetDeptId.startsWith('block-') ? targetDeptId : targetDeptId.replace('dept-', 'block-'))
+                      );
+                      const curr = b?.data?.currentHosts || 0;
+                      const maxH = b?.data?.maxHosts || 30;
+                      return (
+                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-[#eae4d8] text-[#554f45]">
+                          {curr} / {maxH} PCs
+                        </span>
+                      );
+                    })()}
+                  </div>
                   <input
                     type="text"
                     disabled
@@ -1161,7 +1207,7 @@ export const Topology = () => {
                     className="w-full bg-[#eae4d8] border border-[#dfd8c8] rounded-lg px-3 py-2 text-sm text-[#554f45] font-mono"
                   />
                   <p className="text-[11px] text-[#706b63] mt-1 font-mono">
-                    Auto-wires to department switch with DHCP IP lease.
+                    Auto-wires to department switch with dynamic DHCP lease from Campus-DHCP-Server.
                   </p>
                 </div>
 

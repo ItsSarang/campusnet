@@ -13,7 +13,23 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 
 ## Implemented Features
 
-### 1. 3-Tab Architecture & Simplified Canvas Controls (Option A):
+### 1. Central DHCP Server Service in Packet Tracer:
+- Deployed dedicated `Campus-DHCP-Server` (model: `Server-PT`) with static IP `192.168.100.20` in Data Center facility (`block-dc`).
+- Physically cabled to `SW-SERVERS` FastEthernet0/3 in Cisco Packet Tracer 9.0 and saved to `packet-tracer/campusnet_backbone.pkt`.
+- Enabled native DHCP server daemon with department lease pools (`Pool-CS`, `Pool-LIB`, `Pool-ADMIN`), gateways, and DNS settings.
+
+### 2. Dynamic VLSM Subnet Sizing & Capacity Protection:
+- Implemented configurable PC capacity per department on Dashboard.
+- Enforced minimum constraint preventing reductions below existing device allocations.
+- Automatic VLSM CIDR prefix and subnet mask calculation based on requested capacity.
+- Real-time progress bars with dynamic allocation percentages and color indicators.
+- Strict capacity enforcement in Topology Explorer preventing workstation additions when limits are reached, with clear alert banners.
+
+### 3. Dashboard Header Simplification:
+- Completely removed the top card ("Campus Network Control Center") from Dashboard.
+- Telemetry metrics and department capacity cards now sit immediately at the top of the viewport.
+
+### 4. 3-Tab Architecture & Simplified Canvas Controls (Option A):
 - Consolidated application navigation into 3 core pages: Dashboard, Topology Explorer, and Security & Ping Center.
 - Removed redundant IP & Department Manager tab; workstation provisioning, de-provisioning, and IP inspections are unified in Topology Explorer.
 - Removed top header card above the topology canvas; placed a streamlined resync icon button directly inside the canvas Controls group above the zoom `+` button.

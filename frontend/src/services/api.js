@@ -11,6 +11,15 @@ export const api = {
     return res.json();
   },
 
+  async updateDepartmentCapacity(departmentId, maxHosts) {
+    const res = await fetch(`${API_BASE}/departments/capacity`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ departmentId, maxHosts }),
+    });
+    return res.json();
+  },
+
   async getTopology() {
     const res = await fetch(`${API_BASE}/topology`);
     return res.json();

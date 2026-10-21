@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Central DHCP Server Service in Packet Tracer:**
+  - Provisioned `Campus-DHCP-Server` (model: `Server-PT`) with static IP `192.168.100.20` in the Data Center block (`block-dc`).
+  - Physically cabled to `SW-SERVERS` on port FastEthernet0/3 in Cisco Packet Tracer 9.0 and saved to `packet-tracer/campusnet_backbone.pkt`.
+  - Configured native DHCP service with active IP pools for Computer Science (`Pool-CS`), Library (`Pool-LIB`), and Administration (`Pool-ADMIN`).
+- **Dynamic VLSM Subnet Sizing & Capacity Planning:**
+  - Configurable max PC capacity per department on Dashboard with strict validation preventing reduction below existing device counts.
+  - Automatic dynamic recalculation of optimal CIDR prefixes (e.g., /28, /27, /26) and subnet masks based on target host capacity.
+  - Department capacity progress bars with color-coded thresholds (emerald < 70%, amber 70-90%, rose > 90%).
+  - Hard capacity enforcement in Topology Explorer preventing workstation additions when department limit is reached, with descriptive alert banners.
+- **Dashboard Header Simplification:**
+  - Fully removed the top card ("Campus Network Control Center") from Dashboard to maximize content visibility and streamline telemetry display.
 - **3-Tab Navigation Architecture (Option A):**
   - Streamlined application navigation to 3 core pages: Dashboard, Topology Explorer, and Security & Ping Center.
   - Workstation provisioning, IP/subnet viewing, device de-provisioning, and link inspections are consolidated entirely into the spatial Topology canvas.
