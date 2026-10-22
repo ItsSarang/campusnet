@@ -86,6 +86,7 @@ DEPARTMENTS = {
         "gateway": "192.168.10.1",
         "router": "Router-CS",
         "switch": "SW-CS",
+        "core_sw_port": "FastEthernet0/3",
         "color": "#3b82f6",
     },
     "dept-lib": {
@@ -102,6 +103,7 @@ DEPARTMENTS = {
         "gateway": "192.168.20.1",
         "router": "Router-LIB",
         "switch": "SW-LIB",
+        "core_sw_port": "FastEthernet0/2",
         "color": "#10b981",
     },
     "dept-admin": {
@@ -118,6 +120,7 @@ DEPARTMENTS = {
         "gateway": "192.168.30.1",
         "router": "Router-ADMIN",
         "switch": "SW-ADMIN",
+        "core_sw_port": "FastEthernet0/5",
         "color": "#f59e0b",
     },
     "dept-dc": {
@@ -134,6 +137,7 @@ DEPARTMENTS = {
         "gateway": "192.168.100.1",
         "router": "Router-DC",
         "switch": "SW-SERVERS",
+        "core_sw_port": "FastEthernet0/4",
         "color": "#8b5cf6",
     },
 }
@@ -184,10 +188,10 @@ ROUTER_CONFIGS = [
 ]
 
 ROUTER_GRAPH_EDGES = [
-    ("Router-CS", "Campus-Core-Router", "link-Router-CS-Campus-Core-Router"),
-    ("Router-LIB", "Campus-Core-Router", "link-Router-LIB-Campus-Core-Router"),
-    ("Router-ADMIN", "Campus-Core-Router", "link-Router-ADMIN-Campus-Core-Router"),
-    ("Router-DC", "Campus-Core-Router", "link-Router-DC-Campus-Core-Router"),
+    ("Router-CS", "Campus-Core-Router", "link-Router-CS-Core-Dist-SW"),
+    ("Router-LIB", "Campus-Core-Router", "link-Router-LIB-Core-Dist-SW"),
+    ("Router-ADMIN", "Campus-Core-Router", "link-Router-ADMIN-Core-Dist-SW"),
+    ("Router-DC", "Campus-Core-Router", "link-Router-DC-Core-Dist-SW"),
     ("Router-CS", "Router-LIB", "link-Router-CS-Router-LIB"),
     ("Router-ADMIN", "Router-DC", "link-Router-ADMIN-Router-DC"),
     ("Campus-Core-Router", "ISP-Edge-Router", "link-Campus-Core-Router-ISP-Edge-Router"),
@@ -209,7 +213,12 @@ def compute_router_tables(cut_edges=None):
     for u in router_names:
         cost[u][u] = 0
     for u, v, edge_id in ROUTER_GRAPH_EDGES:
-        if edge_id not in cut_edges:
+        is_cut = (
+            edge_id in cut_edges
+            or edge_id.replace("-Core-Dist-SW", "-Campus-Core-Router") in cut_edges
+            or ("Campus-Core-Router" in (u, v) and "link-Campus-Core-Router-Core-Dist-SW" in cut_edges)
+        )
+        if not is_cut:
             cost[u][v] = 1
             cost[v][u] = 1
 
@@ -287,10 +296,15 @@ def compute_building_reachability(cut_edges=None, cut_departments=None):
     reachability = {}
     for dept_id, dept in DEPARTMENTS.items():
         r_name = dept["router"]
-        transit_edge = f"link-{r_name}-Campus-Core-Router"
+        transit_edge = f"link-{r_name}-Core-Dist-SW"
         trunk_edge = f"link-{r_name}-{dept['switch']}"
 
-        is_transit_cut = transit_edge in cut_edges or dept_id in cut_departments
+        is_transit_cut = (
+            transit_edge in cut_edges
+            or f"link-{r_name}-Campus-Core-Router" in cut_edges
+            or dept_id in cut_departments
+            or "link-Campus-Core-Router-Core-Dist-SW" in cut_edges
+        )
         is_trunk_cut = trunk_edge in cut_edges
 
         tbl = tables_by_router.get(r_name, {})
@@ -1107,23 +1121,28 @@ def get_topology():
         )
 
         for dept_id, (_, _, dept) in dept_layout_info.items():
-            transit_id = f"link-{dept['router']}-Campus-Core-Router"
-            is_transit_cut = transit_id in CUT_EDGES or dept_id in CUT_DEPARTMENTS
+            transit_id = f"link-{dept['router']}-Core-Dist-SW"
+            is_transit_cut = (
+                transit_id in CUT_EDGES
+                or f"link-{dept['router']}-Campus-Core-Router" in CUT_EDGES
+                or dept_id in CUT_DEPARTMENTS
+                or is_core_trunk_cut
+            )
 
             edges.append(
                 {
                     "id": transit_id,
                     "source": dept["router"],
-                    "target": "Campus-Core-Router",
+                    "target": "Core-Dist-SW",
                     "category": "core_transit",
-                    "categoryLabel": f"{dept['name']} Core Transit Link",
+                    "categoryLabel": f"{dept['name']} Core Transit Link (Gig0/1 <-> {dept.get('core_sw_port')})",
                     "impact": f"Severing forces Layer 3 traffic for {dept['name']} to reroute via lateral neighbor.",
                     "label": "[SEVERED]" if is_transit_cut else None,
                     "animated": not is_transit_cut,
                     "isCut": is_transit_cut,
                     "departmentId": dept_id,
                     "portA": "GigabitEthernet0/1",
-                    "portB": f"GigabitEthernet0/0.{dept['vlan']}",
+                    "portB": dept.get("core_sw_port", "FastEthernet0/2"),
                     "style": (
                         {"stroke": "#ef4444", "strokeWidth": 3.5, "strokeDasharray": "6,6"}
                         if is_transit_cut
@@ -1284,7 +1303,7 @@ def toggle_link():
     if dept_id and not edge_id:
         dept = DEPARTMENTS.get(dept_id)
         if dept:
-            edge_id = f"link-{dept['router']}-Campus-Core-Router"
+            edge_id = f"link-{dept['router']}-Core-Dist-SW"
 
     if not edge_id:
         return jsonify({"error": "edgeId or departmentId required"}), 400
@@ -1297,7 +1316,7 @@ def toggle_link():
         if dept_id:
             CUT_DEPARTMENTS.add(dept_id)
         for dept_k, dept_v in DEPARTMENTS.items():
-            if edge_id == f"link-{dept_v['router']}-Campus-Core-Router":
+            if edge_id in (f"link-{dept_v['router']}-Core-Dist-SW", f"link-{dept_v['router']}-Campus-Core-Router"):
                 CUT_DEPARTMENTS.add(dept_k)
                 sub_iface = f"GigabitEthernet0/0.{dept_v['vlan']}"
                 try:
@@ -1316,7 +1335,7 @@ def toggle_link():
         if dept_id:
             CUT_DEPARTMENTS.discard(dept_id)
         for dept_k, dept_v in DEPARTMENTS.items():
-            if edge_id == f"link-{dept_v['router']}-Campus-Core-Router":
+            if edge_id in (f"link-{dept_v['router']}-Core-Dist-SW", f"link-{dept_v['router']}-Campus-Core-Router"):
                 CUT_DEPARTMENTS.discard(dept_k)
                 sub_iface = f"GigabitEthernet0/0.{dept_v['vlan']}"
                 try:

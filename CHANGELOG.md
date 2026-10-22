@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Physical Topology Alignment & Core Switch Convergence:**
+  - Connected all 4 department routers (`Router-CS`, `Router-LIB`, `Router-ADMIN`, `Router-DC`) directly into `Core-Dist-SW` (`Fa0/3`, `Fa0/2`, `Fa0/5`, `Fa0/4`) on the topology canvas, accurately reflecting Packet Tracer's physical star cabling.
+  - Connected `Core-Dist-SW` to `Campus-Core-Router` (`Fa0/1` to `Gig0/0`), and `Campus-Core-Router` to `ISP-Edge-Router` (`Gig0/1` to `Gig0/0`).
+  - Maintained Layer 3 routing table isolation between routers while routing physical cables through the Layer 2 distribution switch.
+- **Campus-Wide DHCP Relay & Full IP Verification:**
+  - Configured `ip helper-address 192.168.100.20` on all department routers (`GigabitEthernet0/0` across CS, Library, Admin, and DC), activating RFC 2131 DHCP relay to the central DHCP server.
+  - Verified dynamic DHCP leases across department pools (`Pool-CS`, `Pool-LIB`, `Pool-ADMIN`), ensuring workstations receive genuine IPv4 addresses, subnet masks, default gateways, and DNS server (`192.168.100.10`).
+  - Verified static IP assignments on all infrastructure servers (`Campus-DNS-Server`: `192.168.100.10`, `Campus-DHCP-Server`: `192.168.100.20`, `Admin-Portal-Server`: `192.168.30.20`).
+  - Saved verified network state permanently to Packet Tracer.
 - **Core Distribution Switch & Topology Integration:**
   - Displayed `Core-Dist-SW` (2960-24TT) on the Topology Explorer canvas inside the Campus Core block, centered 140px below `Campus-Core-Router`.
   - Connected `Campus-Core-Router` and `Core-Dist-SW` via an active 802.1Q distribution trunk cable (`Gig0/0` to `Fa0/1`) with interactive cable inspection and severance simulation.

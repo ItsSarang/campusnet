@@ -13,7 +13,15 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 
 ## Implemented Features
 
-### 1. Core Distribution Switch Integration & Dashboard Enhancements:
+### 1. Physical Topology Convergence & DHCP Verification:
+- Re-routed canvas transit links so all 4 department routers (Router-CS, Router-LIB, Router-ADMIN, Router-DC) converge into Core-Dist-SW (FastEthernet0/3, 0/2, 0/5, 0/4), matching Packet Tracer's physical star topology.
+- Connected Core-Dist-SW to Campus-Core-Router (Fa0/1 <-> Gig0/0), which connects to ISP-Edge-Router (Gig0/1 <-> Gig0/0).
+- Configured ip helper-address 192.168.100.20 on all department routers (GigabitEthernet0/0 across CS, Library, Admin, and DC), activating RFC 2131 DHCP relay.
+- Verified live DHCP leasing from Campus-DHCP-Server: workstations receive authentic IPv4 addresses from department pools, with correct netmasks, gateways, and DNS server (192.168.100.10).
+- Audited static IP addresses for infrastructure servers (Campus-DNS-Server: 192.168.100.10, Campus-DHCP-Server: 192.168.100.20, Admin-Portal-Server: 192.168.30.20).
+- Saved verified state to Packet Tracer PKT file.
+
+### 2. Core Distribution Switch Integration & Dashboard Enhancements:
 - Added Core-Dist-SW (Cisco 2960-24TT) to the Topology Explorer canvas inside the Campus Core container, positioned 140px below Campus-Core-Router.
 - Linked Campus-Core-Router to Core-Dist-SW via an 802.1Q distribution trunk cable (Gig0/0 <-> Fa0/1) supporting carrier cut and restore simulation.
 - Preserved Layer 3 router-to-router distance vector calculations without switch interference, keeping routing tables and DVR metrics between routers intact.
