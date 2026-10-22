@@ -769,7 +769,7 @@ export const Topology = () => {
         </div>
 
         {routesDrawerOpen ? (
-          <aside className="w-[480px] min-w-[480px] max-w-[480px] shrink-0 bg-[#f4f0e8] border-l border-[#dfd8c8] p-5 flex flex-col justify-between overflow-hidden z-10 shadow-lg">
+          <aside className="w-96 min-w-96 max-w-96 shrink-0 bg-[#f4f0e8] border-l border-[#dfd8c8] p-5 flex flex-col justify-between overflow-hidden z-10 shadow-lg">
             <div className="flex-1 flex flex-col overflow-hidden">
               <div className="flex items-center justify-between pb-3 border-b border-[#dfd8c8]">
                 <div className="flex items-center space-x-2">
@@ -805,37 +805,32 @@ export const Topology = () => {
               <div className="flex-1 overflow-y-auto mt-4 space-y-5 pr-1 font-mono">
                 {(routesData.tables || []).map((tbl) => (
                   <div key={tbl.router} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="w-2 h-2 rounded-full bg-indigo-600" />
-                        <h4 className="font-bold text-sm text-[#1e1c19] tracking-tight">
-                          {tbl.router}
-                        </h4>
-                      </div>
-                      <span className="text-[11px] text-[#706b63] font-sans">
-                        {tbl.role}
-                      </span>
+                    <div className="flex items-center space-x-2">
+                      <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                      <h4 className="font-bold text-sm text-[#1e1c19] tracking-tight">
+                        {tbl.router}
+                      </h4>
                     </div>
 
                     <div className="border border-[#dfd8c8] rounded-lg overflow-hidden bg-white shadow-2xs">
                       <table className="w-full text-left text-xs text-[#1e1c19]">
                         <thead className="bg-[#eae4d8] text-[#554f45] text-[10px] uppercase font-semibold border-b border-[#dfd8c8]">
                           <tr>
-                            <th className="px-3 py-2 font-mono">Destination Router</th>
-                            <th className="px-3 py-2 text-center font-mono">Distance</th>
-                            <th className="px-3 py-2 font-mono">Next Hop</th>
+                            <th className="px-2.5 py-2 font-mono">Destination</th>
+                            <th className="px-2 py-2 text-center font-mono">Distance</th>
+                            <th className="px-2.5 py-2 font-mono">Next Hop</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-[#dfd8c8] font-mono">
                           {tbl.routes.map((r, i) => (
                             <tr key={i} className="hover:bg-[#f7f4ed]">
-                              <td className="px-3 py-2 font-semibold text-[#1e1c19]">
+                              <td className="px-2.5 py-2 font-semibold text-[#1e1c19] text-[11px] truncate">
                                 {r.destination}
                               </td>
-                              <td className="px-3 py-2 text-center font-bold text-[#1e1c19]">
+                              <td className="px-2 py-2 text-center font-bold text-[#1e1c19] text-xs">
                                 {r.distance}
                               </td>
-                              <td className="px-3 py-2 text-[11px] text-[#554f45]">
+                              <td className="px-2.5 py-2 text-[11px] text-[#554f45] truncate">
                                 {r.nextHop}
                               </td>
                             </tr>
@@ -846,10 +841,6 @@ export const Topology = () => {
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div className="pt-3 border-t border-[#dfd8c8] text-[11px] text-[#706b63] flex justify-between items-center font-mono">
-              <span>Bellman-Ford DVR Engine Active</span>
             </div>
           </aside>
         ) : selectedNode ? (

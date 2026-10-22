@@ -18,7 +18,7 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 - Standardized Device Inspector and Cable Inspector to a fixed 384px width (`w-96 min-w-96 max-w-96 shrink-0`), preventing layout shifts across node types.
 - Eliminated nested inner cards within inspector side panels in favor of clean section dividers (`border-t border-[#dfd8c8]`) and generous vertical spacing (`space-y-5`).
 - Removed redundant bottom close buttons, Academic Zone labels, and generic infrastructure tags from side panels.
-- Upgraded Campus Routing Tables drawer from a floating overlay card into a docked full-height side panel with seamless router-table headers and clean typographic distance columns.
+- Upgraded Campus Routing Tables drawer from a floating overlay card into a docked full-height side panel matched to 384px width (`w-96`), with seamless router-table headers, removed role subtitles, removed bottom status text, and clean typographic distance columns.
 
 ### 2. Controlled Communication & Visual Firewall Matrix:
 - Implemented the Campus Department Communication Matrix (Visual Firewall) in `frontend/src/pages/SecurityCenter.jsx`.

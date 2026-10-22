@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Standardized Device and Cable Inspector drawers to a strict fixed width (384px) across all device types to eliminate layout shifting.
   - Replaced nested inner cards within Device and Cable Inspectors with clean section dividers and generous vertical spacing.
   - Removed bottom close buttons, redundant carrier metadata, and Academic Zone rows to streamline inspector side panels.
-  - Upgraded Campus Routing Tables from a floating modal into a docked full-height side panel matching the Device Inspector.
+  - Unified Campus Routing Tables side panel to the exact fixed width of the Device Inspector (384px).
+  - Removed redundant gateway role subtitles above router tables and removed bottom engine status bar for a clean side panel.
   - Removed dividers between router headers and route tables, and stripped colored badge boxes from the distance column for clean typographic display.
 - **Controlled Communication & Policy Matrix (Visual Firewall):**
   - Interactive 3x4 department access control matrix in SecurityCenter allowing instant packet policy toggling (ALLOW / DENY) between CS, Library, Admin, and Data Center servers.
