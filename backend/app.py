@@ -739,16 +739,16 @@ def get_topology():
             else:
                 non_pcs.append(d)
 
-        height_cs = max(340, 245 + ((len(dept_devices["dept-cs"]) + 1) // 2) * 85 + 30)
-        height_lib = max(340, 245 + ((len(dept_devices["dept-lib"]) + 1) // 2) * 85 + 30)
-        height_admin = max(340, 245 + ((len(dept_devices["dept-admin"]) + 1) // 2) * 85 + 30)
-        height_dc = max(340, 245 + ((len(dept_devices["dept-dc"]) + 1) // 2) * 85 + 30)
+        height_cs = max(460, 345 + ((len(dept_devices["dept-cs"]) + 1) // 2) * 105 + 45)
+        height_lib = max(460, 345 + ((len(dept_devices["dept-lib"]) + 1) // 2) * 105 + 45)
+        height_admin = max(460, 345 + ((len(dept_devices["dept-admin"]) + 1) // 2) * 105 + 45)
+        height_dc = max(460, 345 + ((len(dept_devices["dept-dc"]) + 1) // 2) * 105 + 45)
 
         cs_block_y = 60
-        lib_block_y = cs_block_y + height_cs + 40
+        lib_block_y = cs_block_y + height_cs + 60
 
         admin_block_y = 60
-        dc_block_y = admin_block_y + height_admin + 40
+        dc_block_y = admin_block_y + height_admin + 60
 
         buildings = [
             {
@@ -771,9 +771,9 @@ def get_topology():
                 "subnet": "802.1Q Backbone",
                 "color": "#6366f1",
                 "x": 580,
-                "y": 160,
+                "y": 180,
                 "width": 440,
-                "height": 260,
+                "height": 280,
             },
             {
                 "id": "block-cs",
@@ -847,6 +847,10 @@ def get_topology():
             b["nextHop"] = reach.get("nextHop", "Direct")
             b["reason"] = reach.get("reason", "")
 
+        router_tables = compute_router_tables(CUT_EDGES)
+        tables_by_router = {t["router"]: t for t in router_tables}
+        is_wan_cut = "link-Campus-Core-Router-ISP-Edge-Router" in CUT_EDGES
+
         nodes = []
 
         nodes.append(
@@ -867,7 +871,7 @@ def get_topology():
                     "vlan": "WAN",
                     "gateway": "203.0.113.1",
                     "subnet": "203.0.113.0/30",
-                    "status": "online",
+                    "status": "offline" if is_wan_cut else "online",
                 },
             }
         )
@@ -876,7 +880,7 @@ def get_topology():
             {
                 "id": "Campus-Core-Router",
                 "type": "routerNode",
-                "position": {"x": 770, "y": 245},
+                "position": {"x": 770, "y": 285},
                 "draggable": False,
                 "data": {
                     "label": "Campus-Core-Router",
@@ -902,7 +906,27 @@ def get_topology():
             "dept-dc": (1080, dc_block_y, DEPARTMENTS["dept-dc"]),
         }
 
+        dept_router_reach = {}
+        dept_switch_reach = {}
+
         for dept_id, (base_x, base_y, dept) in dept_layout_info.items():
+            r_name = dept["router"]
+            r_tbl = tables_by_router.get(r_name, {})
+            route_to_core = next(
+                (r for r in r_tbl.get("routes", []) if r["destination"] == "Campus-Core-Router"),
+                None,
+            )
+            r_connected = (
+                route_to_core is not None
+                and route_to_core.get("distance") != "Unreachable"
+                and dept_id not in CUT_DEPARTMENTS
+            )
+            dept_router_reach[dept_id] = r_connected
+
+            trunk_edge = f"link-{r_name}-{dept['switch']}"
+            sw_connected = r_connected and (trunk_edge not in CUT_EDGES)
+            dept_switch_reach[dept_id] = sw_connected
+
             nodes.append(
                 {
                     "id": dept["router"],
@@ -921,7 +945,7 @@ def get_topology():
                         "vlan": dept["vlan"],
                         "gateway": dept["gateway"],
                         "subnet": dept["subnet"],
-                        "status": "online",
+                        "status": "online" if r_connected else "offline",
                     },
                 }
             )
@@ -930,7 +954,7 @@ def get_topology():
                 {
                     "id": dept["switch"],
                     "type": "switchNode",
-                    "position": {"x": base_x + 210, "y": base_y + 155},
+                    "position": {"x": base_x + 210, "y": base_y + 205},
                     "draggable": False,
                     "data": {
                         "label": dept["switch"],
@@ -944,37 +968,46 @@ def get_topology():
                         "vlan": dept["vlan"],
                         "gateway": dept["gateway"],
                         "subnet": dept["subnet"],
-                        "status": "online",
+                        "status": "online" if sw_connected else "offline",
                     },
                 }
             )
 
         for dept_id, d_list in dept_devices.items():
             base_x, base_y, dept = dept_layout_info[dept_id]
+            sw_connected = dept_switch_reach.get(dept_id, False)
+
             for idx, d in enumerate(d_list):
                 name = d.get("name", "")
-                kind = d.get("kind", "host")
+                raw_kind = d.get("kind", "host")
                 model = d.get("model", "PC-PT")
-                flow_type = "serverNode" if kind == "server" or model == "Server-PT" else "hostNode"
+                is_server_device = raw_kind == "server" or model == "Server-PT"
+                flow_type = "serverNode" if is_server_device else "hostNode"
+                normalized_kind = "server" if is_server_device else "host"
+
+                host_edge_id = f"link-{dept['switch']}-{name}"
+                is_host_cut = host_edge_id in CUT_EDGES
+                host_connected = sw_connected and (not is_host_cut)
+                host_status = "online" if host_connected else "offline"
 
                 if name == "Campus-DNS-Server":
                     pos_x = base_x + 110
-                    pos_y = base_y + 245
+                    pos_y = base_y + 345
                     ip_addr = "192.168.100.10"
                     ip_mode = "Static (DNS Service: Active)"
                 elif name == "Campus-DHCP-Server":
                     pos_x = base_x + 310
-                    pos_y = base_y + 245
+                    pos_y = base_y + 345
                     ip_addr = "192.168.100.20"
                     ip_mode = "Static (DHCP Service: Active)"
                 elif name == "Admin-Portal-Server":
                     pos_x = base_x + 110
-                    pos_y = base_y + 245
+                    pos_y = base_y + 345
                     ip_addr = "192.168.30.20"
                     ip_mode = "Static (Admin Web ERP)"
                 else:
                     pos_x = base_x + 110 + (idx % 2) * 200
-                    pos_y = base_y + 245 + (idx // 2) * 85
+                    pos_y = base_y + 345 + (idx // 2) * 105
                     ip_addr = f"192.168.{dept['vlan']}.5{idx + 1}"
                     ip_mode = "DHCP Dynamic Pool"
 
@@ -986,7 +1019,7 @@ def get_topology():
                         "draggable": False,
                         "data": {
                             "label": name,
-                            "kind": kind,
+                            "kind": normalized_kind,
                             "model": model,
                             "department": dept_id,
                             "departmentName": dept["name"],
@@ -996,7 +1029,7 @@ def get_topology():
                             "vlan": dept["vlan"],
                             "gateway": dept["gateway"],
                             "subnet": dept["subnet"],
-                            "status": "online",
+                            "status": host_status,
                         },
                     }
                 )

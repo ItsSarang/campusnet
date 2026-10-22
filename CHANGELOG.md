@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Topology Explorer Canvas & Inspector Enhancements:**
+  - Expanded vertical separation between routers, switches, and workstations to 140px, eliminating label and handle overlap.
+  - Implemented dynamic status indicator dots on routers, switches, and PCs that turn red when completely disconnected from the main core router.
+  - Enabled workstation deletion in the Device Inspector side panel with browser confirmation dialog, synchronizing live device removal with Cisco Packet Tracer.
   - Expanded department building block widths to 480px and reorganized canvas coordinate grid for clean device spacing.
   - Streamlined building block headers: removed raw subnet IPs and dot indicators, simplified titles to clean department names (Computer Science, Library, Administration, Data Center), and redesigned badge layout to prevent overlap with the Add PC button.
   - Added elevated double border and drop shadow to the canvas container to clearly separate the interactive network graph from the page background.

@@ -14,6 +14,9 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 ## Implemented Features
 
 ### 1. Topology Explorer Visual Depth & Inspector Modernization:
+- Expanded vertical separation between routers, switches, and workstations to 140px, giving clean margins so device labels and IP typography never collide.
+- Added dynamic status indicator dots on routers, switches, and workstations that turn red when disconnected from Campus-Core-Router.
+- Enabled workstation deletion in the Device Inspector side panel with native browser confirmation dialog, removing devices live from Cisco Packet Tracer and updating the canvas.
 - Expanded department building block widths to 480px and reorganized topology coordinate layout for clean device spacing.
 - Streamlined building block headers: removed raw subnet IPs and dot indicators, simplified titles to clean department names (Computer Science, Library, Administration, Data Center), and redesigned badge layout to prevent overlap with the Add PC button.
 - Enhanced canvas container with double borders (`border-2 border-[#cfc6b6]`) and an elevated drop shadow (`shadow-[0_12px_40px_-8px_rgba(40,32,24,0.18)]`) establishing clear separation from the page canvas background.
