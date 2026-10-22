@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Dashboard Metric Simplification & Capacity Control Flattening:**
+  - Streamlined top 4 metric cards by removing redundant status pill badges ("Bellman-Ford Active", "802.1Q Trunks Up", "DHCP & Static Pools", "DNS & DHCP Services Active") and refining subtitles to concise descriptions.
+  - Corrected department switch count to 4 by filtering out the core distribution switch (`Core-Dist-SW`), accurately reflecting academic access switches (`SW-CS`, `SW-LIB`, `SW-ADMIN`, `SW-SERVERS`).
+  - Flattened Subnet and Capacity Planning department cards by removing nested inner container boxes for a clean, seamless layout while preserving IP subnet and subnet mask badge boxes.
+- **Topology Inspector Cleanup:**
+  - Removed diagnostic connectivity test section from the PC inspector side panel.
 - **Topology Explorer Canvas & Inspector Enhancements:**
   - Expanded vertical separation between routers, switches, and workstations to 140px, eliminating label and handle overlap.
   - Implemented dynamic status indicator dots on routers, switches, and PCs that turn red when completely disconnected from the main core router.

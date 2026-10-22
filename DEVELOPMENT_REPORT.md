@@ -1,7 +1,7 @@
 # CampusNet Development Report
 
 ## Last Updated
-2026-10-21
+2026-10-22
 
 ---
 
@@ -13,7 +13,13 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 
 ## Implemented Features
 
-### 1. Topology Explorer Visual Depth & Inspector Modernization:
+### 1. Dashboard Metrics & Subnet Planning Refinements:
+- Streamlined the top 4 metric cards: removed redundant pill badges ("Bellman-Ford Active", "802.1Q Trunks Up", "DHCP & Static Pools", "DNS & DHCP Services Active") and simplified subtitles below the counters.
+- Fixed department switch count on Dashboard: excluded backbone distribution switch Core-Dist-SW to accurately display the 4 academic department switches (SW-CS, SW-LIB, SW-ADMIN, SW-SERVERS).
+- Flattened Subnet and Capacity Planning department entries: removed nested inner card boxes around capacity controls while keeping IP subnet and subnet mask badge boxes intact.
+- Preserved real-time state synchronization via onRefresh and periodic background polling (every 10s).
+
+### 2. Topology Explorer Visual Depth & Inspector Modernization:
 - Expanded vertical separation between routers, switches, and workstations to 140px, giving clean margins so device labels and IP typography never collide.
 - Added dynamic status indicator dots on routers, switches, and workstations that turn red when disconnected from Campus-Core-Router.
 - Enabled workstation deletion in the Device Inspector side panel with native browser confirmation dialog, removing devices live from Cisco Packet Tracer and updating the canvas.

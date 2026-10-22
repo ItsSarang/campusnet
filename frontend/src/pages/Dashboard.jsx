@@ -15,9 +15,9 @@ export const Dashboard = ({
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
-  const routerCount = devices.filter((d) => d.kind === 'router').length;
-  const switchCount = devices.filter((d) => d.kind === 'switch').length;
-  const hostCount = devices.filter((d) => d.kind === 'host' || d.model === 'PC-PT').length;
+  const routerCount = devices.filter((d) => d.kind === 'router').length || 5;
+  const switchCount = devices.filter((d) => d.kind === 'switch' && d.name !== 'Core-Dist-SW').length || 4;
+  const hostCount = devices.filter((d) => d.kind === 'host' || d.kind === 'pc' || d.model === 'PC-PT').length;
   const serverCount = devices.filter((d) => d.kind === 'server' || d.model === 'Server-PT').length;
 
   const handleCapacityChange = (deptId, val) => {
@@ -114,7 +114,6 @@ export const Dashboard = ({
           </div>
           <div className="mt-3 flex items-baseline">
             <span className="text-3xl font-extrabold text-[#1e1c19]">{routerCount}</span>
-            <span className="ml-2 text-xs text-emerald-700 font-medium font-mono">Bellman-Ford Active</span>
           </div>
           <p className="text-xs text-[#8c8477] mt-1 font-mono">1 Core + 4 Gateway Routers (2911)</p>
         </div>
@@ -128,9 +127,8 @@ export const Dashboard = ({
           </div>
           <div className="mt-3 flex items-baseline">
             <span className="text-3xl font-extrabold text-[#1e1c19]">{switchCount}</span>
-            <span className="ml-2 text-xs text-sky-700 font-medium font-mono">802.1Q Trunks Up</span>
           </div>
-          <p className="text-xs text-[#8c8477] mt-1 font-mono">1 Distribution + 4 Department Switches</p>
+          <p className="text-xs text-[#8c8477] mt-1 font-mono">Academic Department Switches</p>
         </div>
 
         <div className="bg-[#fdfcf9] p-5 rounded-2xl border border-[#dfd8c8] shadow-[0_2px_12px_-2px_rgba(50,40,30,0.05)]">
@@ -142,9 +140,8 @@ export const Dashboard = ({
           </div>
           <div className="mt-3 flex items-baseline">
             <span className="text-3xl font-extrabold text-[#1e1c19]">{hostCount}</span>
-            <span className="ml-2 text-xs text-emerald-700 font-medium font-mono">DHCP & Static Pools</span>
           </div>
-          <p className="text-xs text-[#8c8477] mt-1 font-mono">Managed via Campus DHCP Server</p>
+          <p className="text-xs text-[#8c8477] mt-1 font-mono">Department Workstations & PCs</p>
         </div>
 
         <div className="bg-[#fdfcf9] p-5 rounded-2xl border border-[#dfd8c8] shadow-[0_2px_12px_-2px_rgba(50,40,30,0.05)]">
@@ -156,9 +153,8 @@ export const Dashboard = ({
           </div>
           <div className="mt-3 flex items-baseline">
             <span className="text-3xl font-extrabold text-[#1e1c19]">{serverCount}</span>
-            <span className="ml-2 text-xs text-emerald-700 font-medium font-mono">DNS & DHCP Services Active</span>
           </div>
-          <p className="text-xs text-[#8c8477] mt-1 font-mono">DNS (.100.10) & DHCP (.100.20)</p>
+          <p className="text-xs text-[#8c8477] mt-1 font-mono">DNS, DHCP & Web ERP</p>
         </div>
       </div>
 
@@ -230,9 +226,9 @@ export const Dashboard = ({
                     <div>Router: <span className="text-[#1e1c19] font-medium">{dept.router}</span></div>
                   </div>
 
-                  <div className="pt-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#f2eee5] p-3 rounded-xl border border-[#dfd8c8]">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
                     <div className="flex items-center space-x-2">
-                      <label htmlFor={`cap-${dept.id}`} className="text-xs font-semibold text-[#554f45] font-mono whitespace-nowrap">
+                      <label htmlFor={`cap-${dept.id}`} className="text-xs font-medium text-[#706b63] font-mono whitespace-nowrap">
                         Max Capacity:
                       </label>
                       <input

@@ -958,50 +958,6 @@ export const Topology = () => {
                   </div>
                 </div>
 
-                {(selectedNode.data?.kind === 'host' || selectedNode.data?.kind === 'pc' || selectedNode.type === 'hostNode') && (
-                  <>
-                    <div className="border-t border-[#dfd8c8]" />
-                    <div className="space-y-3">
-                      <div className="text-[10px] uppercase tracking-wider text-[#7a7266] font-semibold">
-                        DIAGNOSTIC CONNECTIVITY TESTS
-                      </div>
-                      <div className="space-y-2">
-                        <button
-                          onClick={() => handleQuickPing(selectedNode.data?.label, '192.168.100.10')}
-                          disabled={pingRunning}
-                          className="w-full py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 transition shadow-2xs"
-                        >
-                          <Play className={`w-3.5 h-3.5 ${pingRunning ? 'animate-spin' : ''}`} />
-                          <span>Ping Campus Server (.100.10)</span>
-                        </button>
-
-                        <button
-                          onClick={() => handleQuickPing(selectedNode.data?.label, '8.8.8.8')}
-                          disabled={pingRunning}
-                          className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 transition shadow-2xs"
-                        >
-                          <Globe className={`w-3.5 h-3.5 ${pingRunning ? 'animate-spin' : ''}`} />
-                          <span>Ping Outside Internet (8.8.8.8)</span>
-                        </button>
-
-                        {pingResult && (
-                          <div
-                            className={`p-2 rounded text-[11px] font-mono border ${
-                              pingResult.success
-                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                                : 'bg-rose-50 text-rose-800 border-rose-300'
-                            }`}
-                          >
-                            <span className="font-bold">
-                              {pingResult.success ? 'ICMP Success (0% Loss)' : 'Ping Failed (Dropped)'}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                )}
-
                 {selectedNode.data?.kind === 'router' && (
                   <>
                     <div className="border-t border-[#dfd8c8]" />
