@@ -14,6 +14,8 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 ## Implemented Features
 
 ### 1. Topology Explorer Visual Depth & Inspector Modernization:
+- Expanded department building block widths to 480px and reorganized topology coordinate layout for clean device spacing.
+- Streamlined building block headers: removed raw subnet IPs and dot indicators, simplified titles to clean department names (Computer Science, Library, Administration, Data Center), and redesigned badge layout to prevent overlap with the Add PC button.
 - Enhanced canvas container with double borders (`border-2 border-[#cfc6b6]`) and an elevated drop shadow (`shadow-[0_12px_40px_-8px_rgba(40,32,24,0.18)]`) establishing clear separation from the page canvas background.
 - Standardized Device Inspector and Cable Inspector to a fixed 384px width (`w-96 min-w-96 max-w-96 shrink-0`), preventing layout shifts across node types.
 - Eliminated nested inner cards within inspector side panels in favor of clean section dividers (`border-t border-[#dfd8c8]`) and generous vertical spacing (`space-y-5`).

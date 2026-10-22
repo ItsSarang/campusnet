@@ -753,31 +753,31 @@ def get_topology():
         buildings = [
             {
                 "id": "block-isp",
-                "name": "External Internet Gateway (Outside Campus)",
+                "name": "External Internet",
                 "departmentId": "isp",
                 "vlan": 0,
                 "subnet": "203.0.113.0/30",
                 "color": "#64748b",
-                "x": 480,
+                "x": 580,
                 "y": -60,
-                "width": 380,
+                "width": 440,
                 "height": 180,
             },
             {
                 "id": "block-core",
-                "name": "Campus Core Distribution Hub",
+                "name": "Campus Core",
                 "departmentId": "core",
                 "vlan": 1,
                 "subnet": "802.1Q Backbone",
                 "color": "#6366f1",
-                "x": 480,
+                "x": 580,
                 "y": 160,
-                "width": 380,
+                "width": 440,
                 "height": 260,
             },
             {
                 "id": "block-cs",
-                "name": "Academic Block A - Computer Science",
+                "name": "Computer Science",
                 "departmentId": "dept-cs",
                 "vlan": 10,
                 "subnet": DEPARTMENTS["dept-cs"]["subnet"],
@@ -785,14 +785,14 @@ def get_topology():
                 "maxHosts": DEPARTMENTS["dept-cs"]["maxHosts"],
                 "currentHosts": DEPARTMENTS["dept-cs"]["currentHosts"],
                 "color": "#3b82f6",
-                "x": 50,
+                "x": 40,
                 "y": cs_block_y,
-                "width": 380,
+                "width": 480,
                 "height": height_cs,
             },
             {
                 "id": "block-lib",
-                "name": "Academic Block B - Central Library",
+                "name": "Library",
                 "departmentId": "dept-lib",
                 "vlan": 20,
                 "subnet": DEPARTMENTS["dept-lib"]["subnet"],
@@ -800,14 +800,14 @@ def get_topology():
                 "maxHosts": DEPARTMENTS["dept-lib"]["maxHosts"],
                 "currentHosts": DEPARTMENTS["dept-lib"]["currentHosts"],
                 "color": "#10b981",
-                "x": 50,
+                "x": 40,
                 "y": lib_block_y,
-                "width": 380,
+                "width": 480,
                 "height": height_lib,
             },
             {
                 "id": "block-admin",
-                "name": "Academic Block C - Administration",
+                "name": "Administration",
                 "departmentId": "dept-admin",
                 "vlan": 30,
                 "subnet": DEPARTMENTS["dept-admin"]["subnet"],
@@ -815,14 +815,14 @@ def get_topology():
                 "maxHosts": DEPARTMENTS["dept-admin"]["maxHosts"],
                 "currentHosts": DEPARTMENTS["dept-admin"]["currentHosts"],
                 "color": "#f59e0b",
-                "x": 910,
+                "x": 1080,
                 "y": admin_block_y,
-                "width": 380,
+                "width": 480,
                 "height": height_admin,
             },
             {
                 "id": "block-dc",
-                "name": "Campus Data Center - Server Facility",
+                "name": "Data Center",
                 "departmentId": "dept-dc",
                 "vlan": 100,
                 "subnet": DEPARTMENTS["dept-dc"]["subnet"],
@@ -830,9 +830,9 @@ def get_topology():
                 "maxHosts": DEPARTMENTS["dept-dc"]["maxHosts"],
                 "currentHosts": DEPARTMENTS["dept-dc"]["currentHosts"],
                 "color": "#8b5cf6",
-                "x": 910,
+                "x": 1080,
                 "y": dc_block_y,
-                "width": 380,
+                "width": 480,
                 "height": height_dc,
             },
         ]
@@ -853,7 +853,7 @@ def get_topology():
             {
                 "id": "ISP-Edge-Router",
                 "type": "routerNode",
-                "position": {"x": 640, "y": 0},
+                "position": {"x": 770, "y": 0},
                 "draggable": False,
                 "data": {
                     "label": "ISP-Edge-Router",
@@ -876,7 +876,7 @@ def get_topology():
             {
                 "id": "Campus-Core-Router",
                 "type": "routerNode",
-                "position": {"x": 640, "y": 245},
+                "position": {"x": 770, "y": 245},
                 "draggable": False,
                 "data": {
                     "label": "Campus-Core-Router",
@@ -896,10 +896,10 @@ def get_topology():
         )
 
         dept_layout_info = {
-            "dept-cs": (50, cs_block_y, DEPARTMENTS["dept-cs"]),
-            "dept-lib": (50, lib_block_y, DEPARTMENTS["dept-lib"]),
-            "dept-admin": (910, admin_block_y, DEPARTMENTS["dept-admin"]),
-            "dept-dc": (910, dc_block_y, DEPARTMENTS["dept-dc"]),
+            "dept-cs": (40, cs_block_y, DEPARTMENTS["dept-cs"]),
+            "dept-lib": (40, lib_block_y, DEPARTMENTS["dept-lib"]),
+            "dept-admin": (1080, admin_block_y, DEPARTMENTS["dept-admin"]),
+            "dept-dc": (1080, dc_block_y, DEPARTMENTS["dept-dc"]),
         }
 
         for dept_id, (base_x, base_y, dept) in dept_layout_info.items():
@@ -907,7 +907,7 @@ def get_topology():
                 {
                     "id": dept["router"],
                     "type": "routerNode",
-                    "position": {"x": base_x + 160, "y": base_y + 65},
+                    "position": {"x": base_x + 210, "y": base_y + 65},
                     "draggable": False,
                     "data": {
                         "label": dept["router"],
@@ -930,7 +930,7 @@ def get_topology():
                 {
                     "id": dept["switch"],
                     "type": "switchNode",
-                    "position": {"x": base_x + 160, "y": base_y + 155},
+                    "position": {"x": base_x + 210, "y": base_y + 155},
                     "draggable": False,
                     "data": {
                         "label": dept["switch"],
@@ -958,22 +958,22 @@ def get_topology():
                 flow_type = "serverNode" if kind == "server" or model == "Server-PT" else "hostNode"
 
                 if name == "Campus-DNS-Server":
-                    pos_x = base_x + 80
+                    pos_x = base_x + 110
                     pos_y = base_y + 245
                     ip_addr = "192.168.100.10"
                     ip_mode = "Static (DNS Service: Active)"
                 elif name == "Campus-DHCP-Server":
-                    pos_x = base_x + 240
+                    pos_x = base_x + 310
                     pos_y = base_y + 245
                     ip_addr = "192.168.100.20"
                     ip_mode = "Static (DHCP Service: Active)"
                 elif name == "Admin-Portal-Server":
-                    pos_x = base_x + 80
+                    pos_x = base_x + 110
                     pos_y = base_y + 245
                     ip_addr = "192.168.30.20"
                     ip_mode = "Static (Admin Web ERP)"
                 else:
-                    pos_x = base_x + 80 + (idx % 2) * 160
+                    pos_x = base_x + 110 + (idx % 2) * 200
                     pos_y = base_y + 245 + (idx // 2) * 85
                     ip_addr = f"192.168.{dept['vlan']}.5{idx + 1}"
                     ip_mode = "DHCP Dynamic Pool"

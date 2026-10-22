@@ -50,60 +50,58 @@ const BuildingNode = ({ data }) => {
     ringClasses = 'shadow-sm ring-2 ring-amber-300';
   }
 
+  const getCleanName = () => {
+    if (data.departmentId === 'dept-cs' || data.id === 'block-cs') return 'Computer Science';
+    if (data.departmentId === 'dept-lib' || data.id === 'block-lib') return 'Library';
+    if (data.departmentId === 'dept-admin' || data.id === 'block-admin') return 'Administration';
+    if (data.departmentId === 'dept-dc' || data.id === 'block-dc') return 'Data Center';
+    if (data.departmentId === 'core' || data.id === 'block-core') return 'Campus Core';
+    if (data.departmentId === 'isp' || data.id === 'block-isp') return 'External Internet';
+    return data.name;
+  };
+
   return (
     <div
       style={{
-        width: data.width || 380,
+        width: data.width || 480,
         height: data.height || 280,
         borderColor: borderColor,
         backgroundColor: bgColor,
       }}
       className={`rounded-2xl border-2 border-dashed transition-all duration-300 pointer-events-auto p-4 flex flex-col justify-between ${ringClasses}`}
     >
-      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#dfd8c8]/80 whitespace-nowrap">
-        <div className="flex items-center space-x-2 min-w-0">
-          <span
-            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-            style={{ backgroundColor: isOffline ? '#ef4444' : isRerouted ? '#f59e0b' : data.color }}
-          />
-          <h4 className="text-xs font-bold text-[#1e1c19] tracking-tight truncate">
-            {data.name}
+      <div className="flex items-center justify-between gap-3 pb-2.5 border-b border-[#dfd8c8]/80">
+        <div className="flex items-center space-x-2.5 min-w-0 flex-wrap gap-y-1">
+          <h4 className="text-sm font-bold text-[#1e1c19] tracking-tight">
+            {getCleanName()}
           </h4>
-          <span className="text-[10px] font-mono text-[#706b63]">
-            {data.subnet}
-          </span>
-          {data.mask && (
-            <span className="text-[9px] font-mono text-[#706b63] hidden sm:inline">
-              ({data.mask})
-            </span>
-          )}
           {data.vlan > 0 && (
-            <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#eae4d8] text-[#554f45] border border-[#dfd8c8] font-semibold">
+            <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#eae4d8] text-[#554f45] border border-[#dfd8c8] font-mono font-semibold">
               VLAN {data.vlan}
             </span>
           )}
           {data.maxHosts && (
-            <span className="text-[9px] px-1.5 py-0.2 rounded bg-white text-[#554f45] border border-[#dfd8c8] font-mono font-semibold">
+            <span className="text-[10px] px-2 py-0.5 rounded-md bg-white text-[#554f45] border border-[#dfd8c8] font-mono font-semibold">
               {data.currentHosts || 0}/{data.maxHosts} PCs
             </span>
           )}
           {isRerouted && (
-            <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300 font-bold uppercase tracking-tight">
+            <span className="text-[10px] px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300 font-bold uppercase tracking-tight">
               Failover: {data.nextHop}
             </span>
           )}
           {isOffline && (
-            <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-300 font-bold uppercase tracking-tight">
+            <span className="text-[10px] px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 border border-rose-300 font-bold uppercase tracking-tight">
               Offline
             </span>
           )}
         </div>
 
         {data.departmentId !== 'core' && data.departmentId !== 'isp' && (
-          <div className="flex items-center space-x-1.5 flex-shrink-0">
+          <div className="flex items-center shrink-0">
             <button
               onClick={() => data.onOpenAddModal(data.departmentId)}
-              className="flex items-center space-x-1 px-2.5 py-1 rounded bg-white hover:bg-sky-50 text-sky-700 hover:text-sky-800 border border-[#dfd8c8] hover:border-sky-300 text-[11px] font-semibold shadow-xs transition"
+              className="flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-white hover:bg-sky-50 text-sky-700 hover:text-sky-800 border border-[#dfd8c8] hover:border-sky-300 text-xs font-semibold shadow-xs transition"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add PC</span>
