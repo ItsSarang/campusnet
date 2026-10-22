@@ -992,20 +992,20 @@ export const Topology = () => {
             )}
           </aside>
         ) : selectedEdge ? (
-          <aside className="w-96 min-w-96 max-w-96 shrink-0 bg-[#f4f0e8] border-l border-[#dfd8c8] p-5 flex flex-col justify-between overflow-y-auto z-10 shadow-lg">
+          <aside className="w-96 min-w-96 max-w-96 shrink-0 bg-[#f4f0e8] border-l border-[#dfd8c8] p-5 flex flex-col justify-between overflow-y-auto overflow-x-hidden z-10 shadow-lg">
             <div className="space-y-5">
-              <div className="flex items-center justify-between pb-3 border-b border-[#dfd8c8]">
-                <div>
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#7a7266] font-semibold">
+              <div className="flex items-start justify-between pb-3 border-b border-[#dfd8c8] gap-2">
+                <div className="min-w-0 flex-1">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#7a7266] font-semibold block">
                     CABLE INSPECTOR
                   </span>
-                  <h3 className="text-sm font-bold text-[#1e1c19] tracking-tight mt-0.5 truncate">
-                    {selectedEdge.categoryLabel || selectedEdge.id}
+                  <h3 className="text-sm font-bold text-[#1e1c19] tracking-tight mt-0.5 break-words leading-snug">
+                    {(selectedEdge.categoryLabel || selectedEdge.id).replace(/\s*\([^)]*\)/g, '').trim()}
                   </h3>
                 </div>
                 <button
                   onClick={() => setSelectedEdge(null)}
-                  className="text-[#706b63] hover:text-[#1e1c19] p-1 rounded hover:bg-[#eae4d8] transition"
+                  className="text-[#706b63] hover:text-[#1e1c19] p-1 rounded hover:bg-[#eae4d8] transition flex-shrink-0 mt-0.5"
                 >
                   <X className="w-4 h-4" />
                 </button>

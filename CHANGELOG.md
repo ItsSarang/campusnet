@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Cable Inspector Title Formatting & Multi-Line Wrapping:**
+  - Removed bracketed port identifiers and IP addresses from cable inspector titles (e.g. `Department of Computer Science Core Transit Link`).
+  - Added clean multi-line wrapping (`break-words leading-snug`) and enforced strict horizontal containment (`overflow-x-hidden`), ensuring titles wrap to a second line without triggering horizontal panel scrolling.
 - **Physical Topology Alignment & Core Switch Convergence:**
   - Connected all 4 department routers (`Router-CS`, `Router-LIB`, `Router-ADMIN`, `Router-DC`) directly into `Core-Dist-SW` (`Fa0/3`, `Fa0/2`, `Fa0/5`, `Fa0/4`) on the topology canvas, accurately reflecting Packet Tracer's physical star cabling.
   - Connected `Core-Dist-SW` to `Campus-Core-Router` (`Fa0/1` to `Gig0/0`), and `Campus-Core-Router` to `ISP-Edge-Router` (`Gig0/1` to `Gig0/0`).

@@ -13,7 +13,11 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 
 ## Implemented Features
 
-### 1. Physical Topology Convergence & DHCP Verification:
+### 1. Cable Inspector Title Formatting & Wrapping:
+- Stripped bracketed port and IP annotations from Cable Inspector headers, displaying clean titles (e.g. "Department of Computer Science Core Transit Link").
+- Enabled multi-line text wrapping (break-words leading-snug) and set overflow-x-hidden on the Cable Inspector side panel, ensuring long titles wrap to a second line without triggering horizontal panel scrolling.
+
+### 2. Physical Topology Convergence & DHCP Verification:
 - Re-routed canvas transit links so all 4 department routers (Router-CS, Router-LIB, Router-ADMIN, Router-DC) converge into Core-Dist-SW (FastEthernet0/3, 0/2, 0/5, 0/4), matching Packet Tracer's physical star topology.
 - Connected Core-Dist-SW to Campus-Core-Router (Fa0/1 <-> Gig0/0), which connects to ISP-Edge-Router (Gig0/1 <-> Gig0/0).
 - Configured ip helper-address 192.168.100.20 on all department routers (GigabitEthernet0/0 across CS, Library, Admin, and DC), activating RFC 2131 DHCP relay.
