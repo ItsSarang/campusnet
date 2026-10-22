@@ -15,8 +15,8 @@ export const Dashboard = ({
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
-  const routerCount = devices.filter((d) => d.kind === 'router').length || 5;
-  const switchCount = devices.filter((d) => d.kind === 'switch' && d.name !== 'Core-Dist-SW').length || 4;
+  const routerCount = devices.filter((d) => d.kind === 'router').length || 6;
+  const switchCount = devices.filter((d) => d.kind === 'switch').length || 5;
   const hostCount = devices.filter((d) => d.kind === 'host' || d.kind === 'pc' || d.model === 'PC-PT').length;
   const serverCount = devices.filter((d) => d.kind === 'server' || d.model === 'Server-PT').length;
 
@@ -121,14 +121,14 @@ export const Dashboard = ({
         <div className="bg-[#fdfcf9] p-5 rounded-2xl border border-[#dfd8c8] shadow-[0_2px_12px_-2px_rgba(50,40,30,0.05)]">
           <div className="flex items-center justify-between">
             <span className="text-[#706b63] text-xs font-semibold uppercase tracking-wider font-mono">
-              Department Switches
+              Campus Switches
             </span>
             <Server className="w-5 h-5 text-sky-600" />
           </div>
           <div className="mt-3 flex items-baseline">
             <span className="text-3xl font-extrabold text-[#1e1c19]">{switchCount}</span>
           </div>
-          <p className="text-xs text-[#8c8477] mt-1 font-mono">Academic Department Switches</p>
+          <p className="text-xs text-[#8c8477] mt-1 font-mono">1 Distribution + 4 Department Switches</p>
         </div>
 
         <div className="bg-[#fdfcf9] p-5 rounded-2xl border border-[#dfd8c8] shadow-[0_2px_12px_-2px_rgba(50,40,30,0.05)]">
@@ -158,7 +158,7 @@ export const Dashboard = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
         <div className="lg:col-span-2 bg-[#fdfcf9] p-6 rounded-2xl border border-[#dfd8c8] shadow-[0_2px_12px_-2px_rgba(50,40,30,0.05)]">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -281,12 +281,12 @@ export const Dashboard = ({
           </div>
         </div>
 
-        <div className="bg-[#fdfcf9] p-6 rounded-2xl border border-[#dfd8c8] shadow-[0_2px_12px_-2px_rgba(50,40,30,0.05)] flex flex-col">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-[#fdfcf9] p-6 rounded-2xl border border-[#dfd8c8] shadow-[0_2px_12px_-2px_rgba(50,40,30,0.05)] flex flex-col h-full">
+          <div className="flex items-center justify-between mb-4 flex-shrink-0">
             <h2 className="text-lg font-bold text-[#1e1c19]">Simulation Log</h2>
             <span className="text-xs text-[#706b63] font-mono">Live Feed</span>
           </div>
-          <div className="flex-1 overflow-y-auto space-y-3 max-h-[460px] pr-1">
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1">
             {events.length === 0 ? (
               <p className="text-sm text-[#8c8477]">No events recorded yet.</p>
             ) : (

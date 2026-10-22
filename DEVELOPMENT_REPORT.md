@@ -13,11 +13,15 @@ The system operates as a live **Software-Defined Network (SDN) Controller** wher
 
 ## Implemented Features
 
-### 1. Dashboard Metrics & Subnet Planning Refinements:
-- Streamlined the top 4 metric cards: removed redundant pill badges ("Bellman-Ford Active", "802.1Q Trunks Up", "DHCP & Static Pools", "DNS & DHCP Services Active") and simplified subtitles below the counters.
-- Fixed department switch count on Dashboard: excluded backbone distribution switch Core-Dist-SW to accurately display the 4 academic department switches (SW-CS, SW-LIB, SW-ADMIN, SW-SERVERS).
+### 1. Core Distribution Switch Integration & Dashboard Enhancements:
+- Added Core-Dist-SW (Cisco 2960-24TT) to the Topology Explorer canvas inside the Campus Core container, positioned 140px below Campus-Core-Router.
+- Linked Campus-Core-Router to Core-Dist-SW via an 802.1Q distribution trunk cable (Gig0/0 <-> Fa0/1) supporting carrier cut and restore simulation.
+- Preserved Layer 3 router-to-router distance vector calculations without switch interference, keeping routing tables and DVR metrics between routers intact.
+- Normalized Campus-Core-Router IP address to a clean single primary backbone IP (10.0.0.1 / Subnet: 10.0.0.0/24), eliminating lengthy multi-interface IP strings.
+- Updated Dashboard switch metric card to display all 5 campus switches (1 distribution switch + 4 department access switches).
+- Expanded the Simulation Log feed to occupy 100% of the available card height by replacing max-h-[460px] with flex-1 min-h-0 overflow-y-auto.
+- Streamlined the top 4 metric cards: removed redundant pill badges and simplified subtitles below the counters.
 - Flattened Subnet and Capacity Planning department entries: removed nested inner card boxes around capacity controls while keeping IP subnet and subnet mask badge boxes intact.
-- Preserved real-time state synchronization via onRefresh and periodic background polling (every 10s).
 
 ### 2. Topology Explorer Visual Depth & Inspector Modernization:
 - Expanded vertical separation between routers, switches, and workstations to 140px, giving clean margins so device labels and IP typography never collide.

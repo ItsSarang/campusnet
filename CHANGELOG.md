@@ -10,10 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Dashboard Metric Simplification & Capacity Control Flattening:**
-  - Streamlined top 4 metric cards by removing redundant status pill badges ("Bellman-Ford Active", "802.1Q Trunks Up", "DHCP & Static Pools", "DNS & DHCP Services Active") and refining subtitles to concise descriptions.
-  - Corrected department switch count to 4 by filtering out the core distribution switch (`Core-Dist-SW`), accurately reflecting academic access switches (`SW-CS`, `SW-LIB`, `SW-ADMIN`, `SW-SERVERS`).
-  - Flattened Subnet and Capacity Planning department cards by removing nested inner container boxes for a clean, seamless layout while preserving IP subnet and subnet mask badge boxes.
+- **Core Distribution Switch & Topology Integration:**
+  - Displayed `Core-Dist-SW` (2960-24TT) on the Topology Explorer canvas inside the Campus Core block, centered 140px below `Campus-Core-Router`.
+  - Connected `Campus-Core-Router` and `Core-Dist-SW` via an active 802.1Q distribution trunk cable (`Gig0/0` to `Fa0/1`) with interactive cable inspection and severance simulation.
+  - Updated Dashboard switch metric card to reflect all 5 campus switches (1 distribution + 4 department switches).
+  - Maintained strict Layer 3 isolation in Bellman-Ford routing calculations, ensuring switches operate transparently at Layer 2 without modifying routing table distance metrics.
+- **Core Router IP Normalization:**
+  - Simplified `Campus-Core-Router` IP address display from a multi-interface string to a single primary backbone IP (`10.0.0.1`), matching the single-IP format of department routers.
+- **Dashboard Simulation Log Full-Height Layout:**
+  - Removed artificial `max-h-[460px]` constraint from the live Simulation Log list, enabling `flex-1 min-h-0 overflow-y-auto` to occupy 100% of the available vertical card height.
 - **Topology Inspector Cleanup:**
   - Removed diagnostic connectivity test section from the PC inspector side panel.
 - **Topology Explorer Canvas & Inspector Enhancements:**

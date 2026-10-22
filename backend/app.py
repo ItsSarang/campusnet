@@ -171,8 +171,8 @@ ROUTER_CONFIGS = [
         "name": "Campus-Core-Router",
         "department": "core",
         "role": "Campus Core Distribution Hub",
-        "ip": "192.168.10.1 / 20.1 / 30.1 / 100.1 / 203.0.113.1",
-        "subnet": "802.1Q Backbone",
+        "ip": "10.0.0.1",
+        "subnet": "10.0.0.0/24",
     },
     {
         "name": "ISP-Edge-Router",
@@ -768,12 +768,12 @@ def get_topology():
                 "name": "Campus Core",
                 "departmentId": "core",
                 "vlan": 1,
-                "subnet": "802.1Q Backbone",
+                "subnet": "10.0.0.0/24",
                 "color": "#6366f1",
                 "x": 580,
                 "y": 180,
                 "width": 440,
-                "height": 280,
+                "height": 330,
             },
             {
                 "id": "block-cs",
@@ -880,7 +880,7 @@ def get_topology():
             {
                 "id": "Campus-Core-Router",
                 "type": "routerNode",
-                "position": {"x": 770, "y": 285},
+                "position": {"x": 770, "y": 240},
                 "draggable": False,
                 "data": {
                     "label": "Campus-Core-Router",
@@ -889,12 +889,36 @@ def get_topology():
                     "department": None,
                     "departmentName": "Campus Core Backbone",
                     "block": "Campus Core Distribution Hub",
-                    "ip": "192.168.10.1 / 20.1 / 30.1 / 100.1 / 203.0.113.1",
+                    "ip": "10.0.0.1",
                     "ipMode": "Campus Core Backbone Router",
-                    "vlan": "10, 20, 30, 100",
-                    "gateway": "192.168.10.1",
-                    "subnet": "802.1Q Backbone",
+                    "vlan": "1 (Backbone)",
+                    "gateway": "203.0.113.1",
+                    "subnet": "10.0.0.0/24",
                     "status": "online",
+                },
+            }
+        )
+
+        is_core_trunk_cut = "link-Campus-Core-Router-Core-Dist-SW" in CUT_EDGES
+        nodes.append(
+            {
+                "id": "Core-Dist-SW",
+                "type": "switchNode",
+                "position": {"x": 770, "y": 380},
+                "draggable": False,
+                "data": {
+                    "label": "Core-Dist-SW",
+                    "kind": "switch",
+                    "model": "2960-24TT",
+                    "department": "core",
+                    "departmentName": "Campus Core Distribution",
+                    "block": "Campus Core Distribution Hub",
+                    "ip": "Layer 2 Transparent",
+                    "ipMode": "802.1Q Core Trunking",
+                    "vlan": "1, 10, 20, 30, 100",
+                    "gateway": "10.0.0.1",
+                    "subnet": "10.0.0.0/24",
+                    "status": "offline" if is_core_trunk_cut else "online",
                 },
             }
         )
@@ -1055,6 +1079,29 @@ def get_topology():
                     {"stroke": "#ef4444", "strokeWidth": 3.5, "strokeDasharray": "6,6"}
                     if is_wan_cut
                     else {"stroke": "#827666", "strokeWidth": 2}
+                ),
+            }
+        )
+
+        is_core_trunk_cut = "link-Campus-Core-Router-Core-Dist-SW" in CUT_EDGES
+        edges.append(
+            {
+                "id": "link-Campus-Core-Router-Core-Dist-SW",
+                "source": "Campus-Core-Router",
+                "target": "Core-Dist-SW",
+                "category": "core_trunk",
+                "categoryLabel": "Campus Core 802.1Q Distribution Trunk (Gig0/0 <-> Fa0/1)",
+                "impact": "Core distribution trunk linking Campus-Core-Router to Core-Dist-SW.",
+                "label": "[SEVERED]" if is_core_trunk_cut else None,
+                "animated": not is_core_trunk_cut,
+                "isCut": is_core_trunk_cut,
+                "departmentId": "core",
+                "portA": "GigabitEthernet0/0",
+                "portB": "FastEthernet0/1",
+                "style": (
+                    {"stroke": "#ef4444", "strokeWidth": 3.5, "strokeDasharray": "6,6"}
+                    if is_core_trunk_cut
+                    else {"stroke": "#827666", "strokeWidth": 2.5}
                 ),
             }
         )
